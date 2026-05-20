@@ -1,0 +1,11 @@
+.git
+node_modules
+.expo
+server
+Dockerfile
+railway.json
+.dockerignore
+*.zip
+npm-debug.log
+README.md
+RAILWAY_DEPLOY.md

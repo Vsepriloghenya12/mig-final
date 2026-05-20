@@ -1,0 +1,31 @@
+{
+  "name": "mig-native-app-railway-owner-v9",
+  "version": "0.11.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "npx expo start --clear",
+    "start:lan": "npx expo start --lan --clear",
+    "start:tunnel": "npx expo start --tunnel --clear",
+    "doctor": "npx expo-doctor",
+    "export:android": "npx expo export --platform android --output-dir dist-android --clear",
+    "build:apk": "npx eas build -p android --profile apk --clear-cache",
+    "build:aab": "npx eas build -p android --profile production --clear-cache"
+  },
+  "dependencies": {
+    "expo": "~54.0.23",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "~54.0.7",
+    "typescript": "~5.9.2"
+  },
+  "expo": {
+    "install": {
+      "exclude": []
+    }
+  }
+}
