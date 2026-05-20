@@ -28,48 +28,18 @@ function seed() {
     meta: {
       createdAt: nowIso(),
       updatedAt: nowIso(),
-      app: 'mig'
+      app: 'mig',
+      version: 'real-v12'
     },
     users: [
-      { id: 'ivan', name: 'Анастасия ✨', handle: '@nastya.mig', avatarKey: 'avatar', bio: 'Люблю красоту в деталях ✨\nКофе, путешествия и вдохновение', followers: 12400, following: 312, savedPostIds: [] },
-      { id: 'kristina', name: 'Кристина', handle: '@kristina_li', avatarKey: 'person1', bio: 'Город, кофе, прогулки', followers: 8400, following: 178, savedPostIds: [] },
-      { id: 'maxim', name: 'Макс', handle: '@maxim_levin', avatarKey: 'person2', bio: 'Видео и путешествия', followers: 5600, following: 211, savedPostIds: [] },
-      { id: 'mari', name: 'Мария', handle: '@mari.dreams', avatarKey: 'person3', bio: 'Танцы и настроение', followers: 22100, following: 93, savedPostIds: [] }
+      { id: 'ivan', name: 'Ваш профиль', handle: '@mig.user', avatarKey: 'avatar', avatarUrl: '', bio: 'Расскажите о себе', followers: 0, following: 0, savedPostIds: [] }
     ],
-    posts: [
-      { id: 'post_1', authorId: 'kristina', imageKey: 'lake', caption: 'Утро у озера — лучшее начало дня ☀️', location: 'Москва, Россия', createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(), likedBy: ['maxim'], comments: [{ id: 'comment_1', userId: 'maxim', text: 'Невероятно красиво! 😍', createdAt: nowIso() }] },
-      { id: 'post_2', authorId: 'ivan', imageKey: 'cafe', caption: 'Нашла тихое место для завтрака и работы.', location: 'Патрики', createdAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), likedBy: ['kristina', 'mari'], comments: [] },
-      { id: 'post_3', authorId: 'maxim', imageKey: 'city', caption: 'Город сегодня выглядит как открытка.', location: 'Центр', createdAt: new Date(Date.now() - 9 * 3600 * 1000).toISOString(), likedBy: ['ivan', 'kristina'], comments: [{ id: 'comment_2', userId: 'ivan', text: 'Сохранила маршрут.', createdAt: nowIso() }] }
-    ],
-    stories: [
-      { id: 'story_own', userId: 'ivan', name: 'Ваш миг', imageKey: 'boat', own: true, createdAt: nowIso() },
-      { id: 'story_1', userId: 'kristina', name: 'Катя', imageKey: 'person1', createdAt: nowIso() },
-      { id: 'story_2', userId: 'maxim', name: 'Макс', imageKey: 'city', createdAt: nowIso() },
-      { id: 'story_3', userId: 'mari', name: 'Оля', imageKey: 'cafe', createdAt: nowIso() },
-      { id: 'story_4', userId: 'ivan', name: 'Лиз', imageKey: 'flowers', createdAt: nowIso() }
-    ],
-    videos: [
-      { id: 'video_1', authorId: 'mari', imageKey: 'dancer', caption: 'Танцуй так, будто тебя никто не видит ✨ #утро #энергия', location: 'Москва', createdAt: nowIso(), likedBy: ['ivan', 'kristina'], comments: [] },
-      { id: 'video_2', authorId: 'maxim', imageKey: 'nightCity', caption: 'Вечерний город и любимый плейлист.', location: 'Красный Октябрь', createdAt: nowIso(), likedBy: ['mari'], comments: [] },
-      { id: 'video_3', authorId: 'kristina', imageKey: 'river', caption: 'Маршрут для спокойной прогулки у воды.', location: 'Набережная', createdAt: nowIso(), likedBy: ['ivan'], comments: [] }
-    ],
-    places: [
-      { id: 'place_1', name: 'Surf Coffee', distance: '250 м', imageKey: 'cafe', checkins: 31 },
-      { id: 'place_2', name: 'Хлебозавод', distance: '450 м', imageKey: 'city', checkins: 48 },
-      { id: 'place_3', name: 'Двор НЭП', distance: '800 м', imageKey: 'street', checkins: 18 },
-      { id: 'place_4', name: 'Набережная', distance: '1.2 км', imageKey: 'river', checkins: 73 }
-    ],
-    people: [
-      { id: 'person_1', name: 'Катя', distance: '120 м', avatarKey: 'person1' },
-      { id: 'person_2', name: 'Артём', distance: '230 м', avatarKey: 'person2' },
-      { id: 'person_3', name: 'Лена', distance: '300 м', avatarKey: 'person3' }
-    ],
-    collections: [
-      { id: 'collection_1', userId: 'ivan', title: 'Кафе Москвы', imageKey: 'collectionCafe', postIds: ['post_2'] },
-      { id: 'collection_2', userId: 'ivan', title: 'Идеи образов', imageKey: 'collectionStyle', postIds: [] },
-      { id: 'collection_3', userId: 'ivan', title: 'Куда сходить', imageKey: 'collectionNight', postIds: ['post_3'] },
-      { id: 'collection_4', userId: 'ivan', title: 'Выходные', imageKey: 'collectionWeekend', postIds: [] }
-    ]
+    posts: [],
+    stories: [],
+    videos: [],
+    places: [],
+    people: [],
+    collections: []
   };
 }
 
@@ -83,10 +53,10 @@ function normalizeDb(db) {
   db.places ||= [];
   db.people ||= [];
   db.collections ||= [];
-  db.users.forEach((u) => { u.savedPostIds ||= []; });
-  db.posts.forEach((p) => { p.likedBy ||= []; p.comments ||= []; });
-  db.videos.forEach((v) => { v.likedBy ||= []; v.comments ||= []; });
-  db.places.forEach((p) => { p.checkins = Number(p.checkins || 0); });
+  db.users.forEach((u) => { u.savedPostIds ||= []; u.avatarUrl ||= ''; });
+  db.posts.forEach((p) => { p.likedBy ||= []; p.comments ||= []; p.imageUrl ||= ''; });
+  db.videos.forEach((v) => { v.likedBy ||= []; v.comments ||= []; v.imageUrl ||= ''; });
+  db.places.forEach((p) => { p.checkins = Number(p.checkins || 0); p.imageUrl ||= ''; });
   return db;
 }
 
@@ -128,6 +98,7 @@ function publicUser(user) {
     name: user.name,
     handle: user.handle,
     avatarKey: user.avatarKey,
+    avatarUrl: user.avatarUrl || '',
     bio: user.bio,
     followersLabel: formatCompact(user.followers || 0),
     following: user.following || 0
@@ -146,6 +117,7 @@ function shape(db, viewerId) {
         id: post.id,
         author: publicUser(author),
         imageKey: post.imageKey,
+        imageUrl: post.imageUrl || '',
         caption: post.caption,
         location: post.location,
         timeLabel: timeLabel(post.createdAt),
@@ -165,7 +137,7 @@ function shape(db, viewerId) {
   return {
     currentUser: { ...publicUser(viewer), postsCount: currentUserPostsCount },
     posts,
-    stories: db.stories.map((story) => ({ ...story, own: story.userId === viewer.id || story.own })),
+    stories: db.stories.map((story) => ({ ...story, imageUrl: story.imageUrl || '', own: story.userId === viewer.id || story.own })),
     videos: db.videos.map((video) => {
       const author = usersById.get(video.authorId) || viewer;
       const likes = video.likedBy.length;
@@ -173,6 +145,7 @@ function shape(db, viewerId) {
         id: video.id,
         author: publicUser(author),
         imageKey: video.imageKey,
+        imageUrl: video.imageUrl || '',
         caption: video.caption,
         location: video.location,
         likes,
@@ -193,7 +166,7 @@ function getUser(db, userId) {
   let user = db.users.find((item) => item.id === userId);
   if (!user) {
     const safeId = String(userId || 'user').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || id('user');
-    user = { id: safeId, name: 'Новый пользователь', handle: `@${safeId}`, avatarKey: 'avatar', bio: '', followers: 0, following: 0, savedPostIds: [] };
+    user = { id: safeId, name: 'Новый пользователь', handle: `@${safeId}`, avatarKey: 'avatar', avatarUrl: '', bio: '', followers: 0, following: 0, savedPostIds: [] };
     db.users.push(user);
   }
   user.savedPostIds ||= [];
@@ -242,7 +215,7 @@ function ownerPayload(db) {
       saves,
       checkins
     },
-    users: db.users.map((user) => ({ id: user.id, name: user.name, handle: user.handle, avatarKey: user.avatarKey, followers: user.followers || 0, following: user.following || 0 })),
+    users: db.users.map((user) => ({ id: user.id, name: user.name, handle: user.handle, avatarKey: user.avatarKey, avatarUrl: user.avatarUrl || '', followers: user.followers || 0, following: user.following || 0 })),
     posts: db.posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((post) => ({
       ...post,
       authorName: usersById.get(post.authorId)?.name || post.authorId,
@@ -295,6 +268,7 @@ app.post('/api/posts', (req, res) => {
     id: id('post'),
     authorId: user.id,
     imageKey: cleanString(req.body.imageKey, 'lake'),
+    imageUrl: cleanString(req.body.imageUrl),
     caption,
     location: cleanString(req.body.location, 'Москва, Россия'),
     mood: cleanString(req.body.mood),
@@ -304,7 +278,7 @@ app.post('/api/posts', (req, res) => {
     comments: []
   };
   db.posts.unshift(post);
-  db.stories.unshift({ id: id('story'), userId: user.id, name: 'Ваш миг', imageKey: post.imageKey, own: true, createdAt: nowIso() });
+  db.stories.unshift({ id: id('story'), userId: user.id, name: 'Ваш миг', imageKey: post.imageKey, imageUrl: post.imageUrl || '', own: true, createdAt: nowIso() });
   writeDb(db);
   res.json(shape(db, user.id));
 });
@@ -331,7 +305,7 @@ app.post('/api/posts/:id/save', (req, res) => {
     user.savedPostIds.push(post.id);
     let savedCollection = db.collections.find((item) => item.userId === user.id && item.title === 'Сохранённое');
     if (!savedCollection) {
-      savedCollection = { id: id('collection'), userId: user.id, title: 'Сохранённое', imageKey: post.imageKey, postIds: [] };
+      savedCollection = { id: id('collection'), userId: user.id, title: 'Сохранённое', imageKey: post.imageKey, imageUrl: post.imageUrl || '', postIds: [] };
       db.collections.unshift(savedCollection);
     }
     if (!savedCollection.postIds.includes(post.id)) savedCollection.postIds.push(post.id);
@@ -429,6 +403,7 @@ app.post('/api/owner/posts', requireOwner, (req, res) => {
     id: id('post'),
     authorId,
     imageKey: cleanString(req.body.imageKey, 'lake'),
+    imageUrl: cleanString(req.body.imageUrl),
     caption,
     location: cleanString(req.body.location, 'Москва, Россия'),
     createdAt: nowIso(),
@@ -443,7 +418,7 @@ app.patch('/api/owner/posts/:id', requireOwner, (req, res) => {
   const db = readDb();
   const post = db.posts.find((item) => item.id === req.params.id);
   if (!post) return res.status(404).json({ error: 'post not found' });
-  ['caption', 'location', 'imageKey', 'authorId'].forEach((key) => {
+  ['caption', 'location', 'imageKey', 'imageUrl', 'authorId'].forEach((key) => {
     if (req.body[key] !== undefined) post[key] = cleanString(req.body[key], post[key]);
   });
   writeDb(db);
@@ -469,6 +444,7 @@ app.post('/api/owner/videos', requireOwner, (req, res) => {
     id: id('video'),
     authorId,
     imageKey: cleanString(req.body.imageKey, 'dancer'),
+    imageUrl: cleanString(req.body.imageUrl),
     caption,
     location: cleanString(req.body.location, 'Москва'),
     createdAt: nowIso(),
@@ -483,7 +459,7 @@ app.patch('/api/owner/videos/:id', requireOwner, (req, res) => {
   const db = readDb();
   const video = db.videos.find((item) => item.id === req.params.id);
   if (!video) return res.status(404).json({ error: 'video not found' });
-  ['caption', 'location', 'imageKey', 'authorId'].forEach((key) => {
+  ['caption', 'location', 'imageKey', 'imageUrl', 'authorId'].forEach((key) => {
     if (req.body[key] !== undefined) video[key] = cleanString(req.body[key], video[key]);
   });
   writeDb(db);
@@ -506,6 +482,7 @@ app.post('/api/owner/places', requireOwner, (req, res) => {
     name,
     distance: cleanString(req.body.distance, 'рядом'),
     imageKey: cleanString(req.body.imageKey, 'cafe'),
+    imageUrl: cleanString(req.body.imageUrl),
     checkins: Number(req.body.checkins || 0)
   });
   writeDb(db);
@@ -516,7 +493,7 @@ app.patch('/api/owner/places/:id', requireOwner, (req, res) => {
   const db = readDb();
   const place = db.places.find((item) => item.id === req.params.id);
   if (!place) return res.status(404).json({ error: 'place not found' });
-  ['name', 'distance', 'imageKey'].forEach((key) => {
+  ['name', 'distance', 'imageKey', 'imageUrl'].forEach((key) => {
     if (req.body[key] !== undefined) place[key] = cleanString(req.body[key], place[key]);
   });
   if (req.body.checkins !== undefined) place.checkins = Number(req.body.checkins || 0);
@@ -535,7 +512,7 @@ app.patch('/api/owner/users/:id', requireOwner, (req, res) => {
   const db = readDb();
   const user = db.users.find((item) => item.id === req.params.id);
   if (!user) return res.status(404).json({ error: 'user not found' });
-  ['name', 'handle', 'bio', 'avatarKey'].forEach((key) => {
+  ['name', 'handle', 'bio', 'avatarKey', 'avatarUrl'].forEach((key) => {
     if (req.body[key] !== undefined) user[key] = cleanString(req.body[key], user[key]);
   });
   if (req.body.followers !== undefined) user.followers = Number(req.body.followers || 0);

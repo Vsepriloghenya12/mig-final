@@ -72,7 +72,8 @@
     .between { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .list { display:grid; gap:10px; }
     .item { display:grid; grid-template-columns: 54px 1fr auto; gap:12px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:20px; background:rgba(255,255,255,.66); }
-    .thumb { width:54px; height:54px; border-radius:16px; background:linear-gradient(135deg,#ffebe7,#efe9ff); display:grid; place-items:center; color:var(--pink); font-weight:900; overflow:hidden; }
+    .thumb { width:54px; height:54px; border-radius:16px; background:linear-gradient(135deg,#ffebe7,#efe9ff); display:grid; place-items:center; color:var(--pink); font-weight:900; overflow:hidden; font-size:11px; text-align:center; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
     .item h3 { margin:0 0 4px; font-size:15px; }
     .item p { margin:0; color:var(--muted); font-size:13px; line-height:1.36; }
     .actions { display:flex; gap:7px; }
@@ -222,11 +223,11 @@
     function renderForm() {
       if (!state) return;
       if (currentForm === 'place') {
-        $('formFields').innerHTML = `<div class="form-grid"><div class="field"><label>Название</label><input name="name" placeholder="Новое место" required></div><div class="field"><label>Расстояние</label><input name="distance" placeholder="350 м"></div><div class="field"><label>Изображение</label>${imageSelect('cafe')}</div><div class="field"><label>Отметки</label><input name="checkins" type="number" min="0" value="0"></div></div>`;
+        $('formFields').innerHTML = `<div class="form-grid"><div class="field"><label>Название</label><input name="name" placeholder="Новое место" required></div><div class="field"><label>Расстояние</label><input name="distance" placeholder="350 м"></div><div class="field"><label>Встроенное изображение</label>${imageSelect('cafe')}</div><div class="field"><label>Ссылка на реальное фото</label><input name="imageUrl" placeholder="https://...jpg"></div><div class="field"><label>Отметки</label><input name="checkins" type="number" min="0" value="0"></div></div>`;
         return;
       }
       const isVideo = currentForm === 'video';
-      $('formFields').innerHTML = `<div class="form-grid"><div class="field"><label>Автор</label>${userSelect(isVideo ? 'mari' : 'ivan')}</div><div class="field"><label>Изображение</label>${imageSelect(isVideo ? 'dancer' : 'lake')}</div><div class="field full"><label>Текст</label><textarea name="caption" placeholder="Текст публикации" required></textarea></div><div class="field full"><label>Локация</label><input name="location" placeholder="Москва, Россия"></div></div>`;
+      $('formFields').innerHTML = `<div class="form-grid"><div class="field"><label>Автор</label>${userSelect('ivan')}</div><div class="field"><label>Встроенное изображение</label>${imageSelect(isVideo ? 'dancer' : 'lake')}</div><div class="field full"><label>Ссылка на реальное фото</label><input name="imageUrl" placeholder="https://...jpg"></div><div class="field full"><label>Текст</label><textarea name="caption" placeholder="Текст публикации" required></textarea></div><div class="field full"><label>Локация</label><input name="location" placeholder="Москва, Россия"></div></div>`;
     }
 
     async function createEntity(event) {
@@ -253,20 +254,27 @@
       return String(str ?? '').replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
     }
 
+
+    function imageThumb(item) {
+      const url = String(item.imageUrl || item.avatarUrl || '').trim();
+      if (/^https?:\/\//i.test(url)) return `<img src="${escapeHtml(url)}" alt="">`;
+      return escapeHtml(item.imageKey || item.avatarKey || 'img');
+    }
+
     function renderList() {
       if (!state) return;
       $('listTitle').textContent = {posts:'Публикации', videos:'Видео', places:'Места', users:'Пользователи'}[currentView];
       const items = state[currentView] || [];
       if (!items.length) { $('list').innerHTML = '<p class="muted">Пока пусто.</p>'; return; }
       if (currentView === 'places') {
-        $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${escapeHtml((item.name||'?')[0])}</div><div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.distance)} · ${item.checkins || 0} отметок · ${escapeHtml(item.imageKey)}</p></div><div class="actions"><button class="btn small ghost" onclick="editPlace('${item.id}')">Изм.</button><button class="btn small danger" onclick="removeEntity('places','${item.id}')">Удалить</button></div></div>`).join('');
+        $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${imageThumb(item)}</div><div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.distance)} · ${item.checkins || 0} отметок · ${escapeHtml(item.imageKey)}</p></div><div class="actions"><button class="btn small ghost" onclick="editPlace('${item.id}')">Изм.</button><button class="btn small danger" onclick="removeEntity('places','${item.id}')">Удалить</button></div></div>`).join('');
         return;
       }
       if (currentView === 'users') {
-        $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${escapeHtml((item.name||'?')[0])}</div><div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.handle)} · ${item.followers || 0} подписчиков · ${escapeHtml(item.avatarKey)}</p></div><div class="actions"><button class="btn small ghost" onclick="editUser('${item.id}')">Изм.</button></div></div>`).join('');
+        $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${imageThumb(item)}</div><div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.handle)} · ${item.followers || 0} подписчиков · ${escapeHtml(item.avatarKey)}</p></div><div class="actions"><button class="btn small ghost" onclick="editUser('${item.id}')">Изм.</button></div></div>`).join('');
         return;
       }
-      $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${escapeHtml(item.imageKey)}</div><div><h3>${escapeHtml(item.authorName || item.authorId)}</h3><p>${escapeHtml(item.caption)}</p><p>${escapeHtml(item.location)} · ${item.likes || 0} лайков · ${item.commentsCount || 0} комм.</p></div><div class="actions"><button class="btn small ghost" onclick="editContent('${currentView}','${item.id}')">Изм.</button><button class="btn small danger" onclick="removeEntity('${currentView}','${item.id}')">Удалить</button></div></div>`).join('');
+      $('list').innerHTML = items.map(item => `<div class="item"><div class="thumb">${imageThumb(item)}</div><div><h3>${escapeHtml(item.authorName || item.authorId)}</h3><p>${escapeHtml(item.caption)}</p><p>${escapeHtml(item.location)} · ${item.likes || 0} лайков · ${item.commentsCount || 0} комм.</p></div><div class="actions"><button class="btn small ghost" onclick="editContent('${currentView}','${item.id}')">Изм.</button><button class="btn small danger" onclick="removeEntity('${currentView}','${item.id}')">Удалить</button></div></div>`).join('');
     }
 
     async function editContent(type, id) {
@@ -275,8 +283,10 @@
       if (caption === null) return;
       const location = prompt('Локация', item.location || '');
       if (location === null) return;
+      const imageUrl = prompt('Ссылка на фото', item.imageUrl || '');
+      if (imageUrl === null) return;
       const endpoint = type === 'posts' ? `/api/owner/posts/${id}` : `/api/owner/videos/${id}`;
-      state = await api(endpoint, { method: 'PATCH', body: JSON.stringify({ caption, location }) });
+      state = await api(endpoint, { method: 'PATCH', body: JSON.stringify({ caption, location, imageUrl }) });
       render(); toast('Обновлено');
     }
 
@@ -284,7 +294,8 @@
       const item = state.places.find(x => x.id === id);
       const name = prompt('Название', item.name || ''); if (name === null) return;
       const distance = prompt('Расстояние', item.distance || ''); if (distance === null) return;
-      state = await api(`/api/owner/places/${id}`, { method: 'PATCH', body: JSON.stringify({ name, distance }) });
+      const imageUrl = prompt('Ссылка на фото', item.imageUrl || ''); if (imageUrl === null) return;
+      state = await api(`/api/owner/places/${id}`, { method: 'PATCH', body: JSON.stringify({ name, distance, imageUrl }) });
       render(); toast('Обновлено');
     }
 
@@ -292,7 +303,8 @@
       const item = state.users.find(x => x.id === id);
       const name = prompt('Имя', item.name || ''); if (name === null) return;
       const handle = prompt('Handle', item.handle || ''); if (handle === null) return;
-      state = await api(`/api/owner/users/${id}`, { method: 'PATCH', body: JSON.stringify({ name, handle }) });
+      const avatarUrl = prompt('Ссылка на аватар', item.avatarUrl || ''); if (avatarUrl === null) return;
+      state = await api(`/api/owner/users/${id}`, { method: 'PATCH', body: JSON.stringify({ name, handle, avatarUrl }) });
       render(); toast('Обновлено');
     }
 
@@ -308,7 +320,7 @@
     }
 
     async function resetDb() {
-      if (!confirm('Сбросить данные к стартовым?')) return;
+      if (!confirm('Очистить базу и убрать демо-контент?')) return;
       state = await api('/api/owner/reset', { method: 'POST', body: JSON.stringify({}) });
       render(); toast('Данные сброшены');
     }

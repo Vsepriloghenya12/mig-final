@@ -21,7 +21,7 @@ const { width } = Dimensions.get('window');
 const TOP = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 8;
 const CONTENT_BOTTOM = 112;
 const USER_ID = 'ivan';
-const DEFAULT_API_URL = ''; // После деплоя можно заменить на Railway URL: https://your-app.up.railway.app
+const DEFAULT_API_URL = 'https://mig-final-production.up.railway.app';
 
 const colors = {
   bg: '#FBFAFF',
@@ -102,6 +102,13 @@ const createImages = [
 
 function src(key) {
   return imageByKey[key] || imageByKey.lake;
+}
+
+function mediaSource(item, fallbackKey = 'lake') {
+  if (typeof item === 'string') return src(item);
+  const url = String(item?.imageUrl || item?.avatarUrl || '').trim();
+  if (/^https?:\/\//i.test(url)) return { uri: url };
+  return src(item?.imageKey || item?.avatarKey || fallbackKey);
 }
 
 function normalizeUrl(value) {
@@ -210,7 +217,7 @@ export default function App() {
         loading={loading}
         error={error}
       />
-      <FloatingServerButton onPress={() => setSettingsOpen(true)} dark={dark} />
+      {!DEFAULT_API_URL ? <FloatingServerButton onPress={() => setSettingsOpen(true)} dark={dark} /> : null}
     </View>
   );
 }
@@ -288,7 +295,7 @@ function CircleButton({ label, light, onPress }) {
   return <Pressable onPress={onPress} style={[styles.circleButton, light && styles.circleButtonLight]}><Text style={[styles.circleButtonText, light && styles.circleButtonTextLight]}>{label}</Text></Pressable>;
 }
 
-function FeedScreen({ data, api, reload, updateData, flash }) {
+function FeedScreen({ data, api, reload, updateData, flash, setActive }) {
   const [commentPost, setCommentPost] = useState(null);
 
   const likePost = async (postId) => {
@@ -313,11 +320,13 @@ function FeedScreen({ data, api, reload, updateData, flash }) {
   return (
     <Screen>
       <Header onRefresh={reload} right />
-      <Text style={styles.sectionTitle}>Миги</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesRow}>
-        {data.stories.map((story) => <Story key={story.id} story={story} />)}
-      </ScrollView>
-      {data.posts.map((post) => (
+      <View style={styles.storiesWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesRow}>
+          <OwnStoryButton onPress={() => setActive('create')} />
+          {data.stories.map((story) => <Story key={story.id} story={story} />)}
+        </ScrollView>
+      </View>
+      {data.posts.length ? data.posts.map((post) => (
         <PostCard
           key={post.id}
           post={post}
@@ -325,7 +334,9 @@ function FeedScreen({ data, api, reload, updateData, flash }) {
           onSave={() => savePost(post.id)}
           onComment={() => setCommentPost(post)}
         />
-      ))}
+      )) : (
+        <EmptyState title="Пока нет публикаций" text="Создайте первый миг или добавьте посты через страницу владельца." action="Создать миг" onPress={() => setActive('create')} />
+      )}
       <CommentModal
         visible={Boolean(commentPost)}
         post={commentPost}
@@ -338,11 +349,23 @@ function FeedScreen({ data, api, reload, updateData, flash }) {
   );
 }
 
+function OwnStoryButton({ onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.story}>
+      <View style={styles.ownStoryRing}>
+        <Image source={assets.mark} style={styles.ownStoryMark} resizeMode="cover" />
+        <View style={styles.storyPlus}><Text style={styles.storyPlusText}>+</Text></View>
+      </View>
+      <Text style={styles.storyName}>Ваш миг</Text>
+    </Pressable>
+  );
+}
+
 function Story({ story }) {
   return (
     <View style={styles.story}>
       <View style={styles.storyRing}>
-        <Image source={src(story.imageKey)} style={styles.storyImage} resizeMode="cover" />
+        <Image source={mediaSource(story, 'avatar')} style={styles.storyImage} resizeMode="cover" />
         {story.own ? <View style={styles.storyPlus}><Text style={styles.storyPlusText}>+</Text></View> : null}
       </View>
       <Text style={styles.storyName}>{story.name}</Text>
@@ -355,13 +378,13 @@ function PostCard({ post, onLike, onSave, onComment }) {
   return (
     <View style={styles.postCard}>
       <View style={styles.postHead}>
-        <Image source={src(post.author.avatarKey)} style={styles.avatar} />
+        <Image source={mediaSource(post.author, 'avatar')} style={styles.avatar} />
         <View style={styles.flex}>
           <Text style={styles.userName}>{post.author.handle}</Text>
           <Text style={styles.meta}>{post.location} · {post.timeLabel}</Text>
         </View>
       </View>
-      <Image source={src(post.imageKey)} style={styles.postPhoto} resizeMode="cover" />
+      <Image source={mediaSource(post, 'lake')} style={styles.postPhoto} resizeMode="cover" />
       <View style={styles.postActions}>
         <View style={styles.rowCenter}>
           <Pressable onPress={onLike} style={styles.actionHit}><Text style={[styles.actionIcon, post.liked && styles.pinkIcon]}>{post.liked ? '♥' : '♡'}</Text></Pressable><Text style={styles.smallCount}>{post.likes}</Text>
@@ -426,9 +449,9 @@ function VideoScreen({ data, api, updateData, flash }) {
     }
   };
 
-  if (!video) return <View style={styles.fullScreen} />;
+  if (!video) return <VideoEmptyState />;
   return (
-    <ImageBackground source={src(video.imageKey)} style={styles.fullScreen} resizeMode="cover">
+    <ImageBackground source={mediaSource(video, 'dancer')} style={styles.fullScreen} resizeMode="cover">
       <View style={styles.videoShade} />
       <SafeAreaView style={styles.videoSafe}>
         <View style={styles.videoTop}>
@@ -439,7 +462,7 @@ function VideoScreen({ data, api, updateData, flash }) {
           </View>
         </View>
         <View style={styles.videoRail}>
-          <View style={styles.videoAvatarWrap}><Image source={src(video.author.avatarKey)} style={styles.videoAvatar} /></View>
+          <View style={styles.videoAvatarWrap}><Image source={mediaSource(video.author, 'avatar')} style={styles.videoAvatar} /></View>
           <VideoAction icon={video.liked ? '♥' : '♡'} value={video.likesLabel} active={video.liked} onPress={likeVideo} />
           <VideoAction icon="●" value={String(video.commentsCount)} />
           <VideoAction icon="↧" value="Далее" onPress={() => setIndex((value) => value + 1)} />
@@ -452,6 +475,17 @@ function VideoScreen({ data, api, updateData, flash }) {
         </View>
       </SafeAreaView>
     </ImageBackground>
+  );
+}
+
+function VideoEmptyState() {
+  return (
+    <View style={[styles.fullScreen, styles.videoEmpty]}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <Image source={assets.mark} style={styles.videoEmptyLogo} />
+      <Text style={styles.videoEmptyTitle}>Видео появятся здесь</Text>
+      <Text style={styles.videoEmptyText}>Добавьте первое видео через страницу владельца или опубликуйте миг в приложении.</Text>
+    </View>
   );
 }
 
@@ -474,17 +508,25 @@ function NearbyScreen({ data, api, updateData, flash, reload }) {
     <Screen>
       <Header title="Рядом" subtitle="Места, люди и моменты поблизости" right onRefresh={reload} />
       <View style={styles.chips}>{['Москва', 'рядом', 'сейчас'].map((chip, index) => <Chip key={chip} label={chip} active={index === 0} />)}</View>
-      <ImageBackground source={assets.map} style={styles.mapCard} imageStyle={styles.mapImage} resizeMode="cover">
-        <View style={styles.mapPulse} />
-        <MapPin left="18%" top="38%" color={colors.coral} />
-        <MapPin left="47%" top="47%" color={colors.blue} big />
-        <MapPin left="72%" top="30%" color={colors.pink} />
-        <MapPin left="82%" top="64%" color={colors.violet} />
-      </ImageBackground>
-      <View style={styles.sectionLine}><Text style={styles.sectionTitle}>Популярные места рядом</Text></View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.placesScroll}>{data.places.map((place) => <PlaceCard key={place.id} place={place} onCheckIn={() => checkIn(place.id)} />)}</ScrollView>
-      <Text style={styles.sectionTitle}>Люди рядом с вами</Text>
-      <View style={styles.peopleRow}>{data.people.map((person) => <PersonCard key={person.id} person={person} />)}</View>
+      {data.places.length ? (
+        <>
+          <ImageBackground source={assets.map} style={styles.mapCard} imageStyle={styles.mapImage} resizeMode="cover">
+            <View style={styles.mapPulse} />
+            <MapPin left="18%" top="38%" color={colors.coral} />
+            <MapPin left="47%" top="47%" color={colors.blue} big />
+            <MapPin left="72%" top="30%" color={colors.pink} />
+            <MapPin left="82%" top="64%" color={colors.violet} />
+          </ImageBackground>
+          <View style={styles.sectionLine}><Text style={styles.sectionTitle}>Популярные места рядом</Text></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.placesScroll}>{data.places.map((place) => <PlaceCard key={place.id} place={place} onCheckIn={() => checkIn(place.id)} />)}</ScrollView>
+        </>
+      ) : <EmptyState title="Мест рядом пока нет" text="Добавьте реальные места на странице владельца — они сразу появятся в приложении." />}
+      {data.people.length ? (
+        <>
+          <Text style={styles.sectionTitle}>Люди рядом с вами</Text>
+          <View style={styles.peopleRow}>{data.people.map((person) => <PersonCard key={person.id} person={person} />)}</View>
+        </>
+      ) : null}
     </Screen>
   );
 }
@@ -501,7 +543,7 @@ function MapPin({ left, top, color, big }) {
 function PlaceCard({ place, onCheckIn }) {
   return (
     <View style={styles.placeCard}>
-      <Image source={src(place.imageKey)} style={styles.placeImage} resizeMode="cover" />
+      <Image source={mediaSource(place, 'cafe')} style={styles.placeImage} resizeMode="cover" />
       <Text style={styles.placeName}>{place.name}</Text>
       <Text style={styles.placeMeta}>{place.distance} · {place.checkins} отметок</Text>
       <Pressable onPress={onCheckIn} style={styles.placeButton}><Text style={styles.placeButtonText}>Я здесь</Text></Pressable>
@@ -510,7 +552,7 @@ function PlaceCard({ place, onCheckIn }) {
 }
 
 function PersonCard({ person }) {
-  return <View style={styles.personCard}><Image source={src(person.avatarKey)} style={styles.personImage} /><Text style={styles.personName}>{person.name}</Text><Text style={styles.personMeta}>{person.distance}</Text></View>;
+  return <View style={styles.personCard}><Image source={mediaSource(person, 'avatar')} style={styles.personImage} /><Text style={styles.personName}>{person.name}</Text><Text style={styles.personMeta}>{person.distance}</Text></View>;
 }
 
 function CreateScreen({ api, updateData, flash, setActive }) {
@@ -518,6 +560,7 @@ function CreateScreen({ api, updateData, flash, setActive }) {
   const [imageKey, setImageKey] = useState('lake');
   const [mood, setMood] = useState('Вдохновлено');
   const [duration, setDuration] = useState('24 часа');
+  const [imageUrl, setImageUrl] = useState('');
   const [publishing, setPublishing] = useState(false);
 
   const publish = async () => {
@@ -527,9 +570,10 @@ function CreateScreen({ api, updateData, flash, setActive }) {
     }
     setPublishing(true);
     try {
-      const result = await api.post('/api/posts', { userId: USER_ID, caption: caption.trim(), imageKey, mood, duration, location: 'Москва, Россия' });
+      const result = await api.post('/api/posts', { userId: USER_ID, caption: caption.trim(), imageKey, imageUrl: imageUrl.trim(), mood, duration, location: 'Москва, Россия' });
       updateData({ posts: result.posts, stories: result.stories, currentUser: result.currentUser });
       setCaption('');
+      setImageUrl('');
       setActive('feed');
       flash('Миг опубликован');
     } catch (err) {
@@ -540,7 +584,7 @@ function CreateScreen({ api, updateData, flash, setActive }) {
   };
 
   return (
-    <ImageBackground source={src(imageKey)} style={styles.fullScreen} resizeMode="cover">
+    <ImageBackground source={mediaSource({ imageKey, imageUrl }, imageKey)} style={styles.fullScreen} resizeMode="cover">
       <View style={styles.createShade} />
       <SafeAreaView style={styles.createSafe}>
         <View style={styles.createTop}>
@@ -564,6 +608,16 @@ function CreateScreen({ api, updateData, flash, setActive }) {
             placeholderTextColor="rgba(255,255,255,0.56)"
             style={styles.createInput}
             multiline
+          />
+          <TextInput
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            placeholder="Ссылка на фото, если нужно реальное изображение"
+            placeholderTextColor="rgba(255,255,255,0.56)"
+            style={styles.createUrlInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
           />
           <Text style={styles.panelLabel}>Фото</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.createImageRow}>
@@ -592,7 +646,7 @@ function ProfileScreen({ data, api, updateData, flash, setActive }) {
     <Screen>
       <Header title="Профиль" right={false} />
       <View style={styles.profileHead}>
-        <Image source={src(user.avatarKey)} style={styles.profileAvatar} />
+        <Image source={mediaSource(user, 'avatar')} style={styles.profileAvatar} />
         <View style={styles.flex}>
           <Text style={styles.profileName}>{user.name}</Text>
           <Text style={styles.profileHandle}>{user.handle}</Text>
@@ -612,7 +666,7 @@ function ProfileScreen({ data, api, updateData, flash, setActive }) {
           </Pressable>
         ))}
       </View>
-      <View style={styles.photoGrid}>{(userPosts.length ? userPosts : data.posts).slice(0, 9).map((post) => <Image key={post.id} source={src(post.imageKey)} style={styles.gridImage} resizeMode="cover" />)}</View>
+      {userPosts.length ? <View style={styles.photoGrid}>{userPosts.slice(0, 9).map((post) => <Image key={post.id} source={mediaSource(post, 'lake')} style={styles.gridImage} resizeMode="cover" />)}</View> : <EmptyState title="Ваш профиль пока пустой" text="Опубликуйте первый миг — он появится здесь." action="Создать миг" onPress={() => setActive('create')} />}
       <ProfileEditModal visible={editOpen} user={user} api={api} updateData={updateData} flash={flash} onClose={() => setEditOpen(false)} />
     </Screen>
   );
@@ -690,19 +744,30 @@ function CollectionsScreen({ data, api, updateData, flash, setActive }) {
         />
         <Pressable onPress={createCollection} style={styles.inlineButton}><Text style={styles.inlineButtonText}>＋</Text></Pressable>
       </View>
-      <View style={styles.collectionsGrid}>{data.collections.map((item, index) => <CollectionCard key={item.id} item={item} wide={index === 0} />)}</View>
+      {data.collections.length ? <View style={styles.collectionsGrid}>{data.collections.map((item, index) => <CollectionCard key={item.id} item={item} wide={index === 0} />)}</View> : <EmptyState title="Подборок пока нет" text="Создайте подборку для сохранённых мест и публикаций." />}
     </Screen>
   );
 }
 
 function CollectionCard({ item, wide }) {
   return (
-    <ImageBackground source={src(item.imageKey)} style={[styles.collectionCard, wide && styles.collectionWide]} imageStyle={styles.collectionImage} resizeMode="cover">
+    <ImageBackground source={mediaSource(item, 'collectionCafe')} style={[styles.collectionCard, wide && styles.collectionWide]} imageStyle={styles.collectionImage} resizeMode="cover">
       <View style={styles.collectionShade}>
         <Text style={styles.collectionTitle}>{item.title}</Text>
         <Text style={styles.collectionCount}>{item.countLabel}</Text>
       </View>
     </ImageBackground>
+  );
+}
+
+function EmptyState({ title, text, action, onPress }) {
+  return (
+    <View style={styles.emptyState}>
+      <Image source={assets.mark} style={styles.emptyLogo} />
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyText}>{text}</Text>
+      {action ? <Pressable onPress={onPress} style={styles.emptyButton}><Text style={styles.emptyButtonText}>{action}</Text></Pressable> : null}
+    </View>
   );
 }
 
@@ -773,7 +838,7 @@ const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: colors.bg },
   darkApp: { backgroundColor: colors.black },
   screen: { flex: 1 },
-  content: { paddingTop: TOP, paddingHorizontal: 16, paddingBottom: CONTENT_BOTTOM },
+  content: { paddingTop: TOP, paddingHorizontal: 0, paddingBottom: CONTENT_BOTTOM },
   flex: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   blob: { position: 'absolute', borderRadius: 999, opacity: 0.55 },
@@ -795,7 +860,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: colors.white, fontSize: 14, fontWeight: '900' },
   secondaryButton: { height: 46, borderRadius: 23, paddingHorizontal: 18, backgroundColor: '#F4F1FB', alignItems: 'center', justifyContent: 'center' },
   secondaryButtonText: { color: colors.ink, fontSize: 14, fontWeight: '900' },
-  header: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  header: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 24 },
   brandRow: { flexDirection: 'row', alignItems: 'center' },
   logoMark: { width: 38, height: 38, borderRadius: 11, marginRight: 10 },
   logoText: { color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
@@ -805,15 +870,18 @@ const styles = StyleSheet.create({
   circleButtonText: { color: colors.ink, fontSize: 21, fontWeight: '900' },
   circleButtonTextLight: { color: colors.white },
   backText: { fontSize: 32, color: colors.ink, fontWeight: '500', marginTop: -3 },
-  sectionTitle: { fontSize: 22, fontWeight: '900', color: colors.ink, letterSpacing: -0.4, marginTop: 2, marginBottom: 14 },
-  storiesRow: { paddingRight: 24, paddingBottom: 18 },
-  story: { width: 76, marginRight: 12, alignItems: 'center' },
-  storyRing: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, borderColor: colors.hotPink, padding: 3, backgroundColor: colors.card },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: colors.ink, letterSpacing: -0.4, marginTop: 2, marginBottom: 14, marginHorizontal: 24 },
+  storiesWrap: { marginBottom: 20, overflow: 'visible' },
+  storiesRow: { paddingLeft: 24, paddingRight: 36, paddingTop: 4, paddingBottom: 6, overflow: 'visible' },
+  story: { width: 76, marginRight: 12, alignItems: 'center', overflow: 'visible' },
+  storyRing: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, borderColor: colors.hotPink, padding: 3, backgroundColor: colors.card, overflow: 'visible' },
+  ownStoryRing: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, borderColor: colors.hotPink, padding: 3, backgroundColor: colors.card, overflow: 'visible', alignItems: 'center', justifyContent: 'center' },
+  ownStoryMark: { width: 56, height: 56, borderRadius: 28 },
   storyImage: { width: '100%', height: '100%', borderRadius: 29 },
   storyPlus: { position: 'absolute', right: -2, bottom: 2, width: 21, height: 21, borderRadius: 11, backgroundColor: colors.violet, borderWidth: 2, borderColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   storyPlusText: { color: colors.white, fontWeight: '900', fontSize: 14, marginTop: -1 },
   storyName: { color: colors.text, fontSize: 12, fontWeight: '800', marginTop: 7 },
-  postCard: { backgroundColor: colors.card, borderRadius: 30, overflow: 'hidden', marginBottom: 20, ...shadow },
+  postCard: { backgroundColor: colors.card, borderRadius: 30, overflow: 'hidden', marginHorizontal: 24, marginBottom: 20, ...shadow },
   postHead: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13 },
   avatar: { width: 42, height: 42, borderRadius: 21, marginRight: 11 },
   userName: { color: colors.ink, fontWeight: '900' },
@@ -849,25 +917,25 @@ const styles = StyleSheet.create({
   videoCaption: { color: colors.white, fontSize: 16, lineHeight: 23, fontWeight: '700' },
   locationPill: { alignSelf: 'flex-start', marginTop: 12, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 12, paddingVertical: 8 },
   locationPillText: { color: colors.white, fontSize: 12, fontWeight: '900' },
-  chips: { flexDirection: 'row', gap: 9, marginBottom: 16 },
+  chips: { flexDirection: 'row', gap: 9, marginBottom: 16, marginHorizontal: 24 },
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
   chipActive: { backgroundColor: '#EFEAFF', borderColor: '#EFEAFF' },
   chipText: { color: colors.text, fontSize: 13, fontWeight: '800' },
   chipTextActive: { color: colors.violet, fontWeight: '900' },
-  mapCard: { height: 210, borderRadius: 30, overflow: 'hidden', marginBottom: 24, backgroundColor: colors.faint, ...shadow },
+  mapCard: { height: 210, borderRadius: 30, overflow: 'hidden', marginHorizontal: 24, marginBottom: 24, backgroundColor: colors.faint, ...shadow },
   mapImage: { borderRadius: 30 },
   mapPulse: { position: 'absolute', left: '43%', top: '38%', width: 62, height: 62, borderRadius: 31, backgroundColor: 'rgba(47,123,255,0.12)' },
   pin: { position: 'absolute', backgroundColor: colors.white, borderWidth: 4, alignItems: 'center', justifyContent: 'center' },
   pinDot: { width: 9, height: 9, borderRadius: 5 },
   sectionLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  placesScroll: { paddingBottom: 20 },
+  placesScroll: { paddingLeft: 24, paddingRight: 24, paddingBottom: 20 },
   placeCard: { width: 154, marginRight: 12, backgroundColor: colors.card, padding: 9, borderRadius: 22, borderWidth: 1, borderColor: colors.line },
   placeImage: { width: 136, height: 96, borderRadius: 17, marginBottom: 9, backgroundColor: colors.line },
   placeName: { color: colors.ink, fontSize: 14, fontWeight: '900' },
   placeMeta: { color: colors.muted, fontSize: 12, fontWeight: '700', marginTop: 4 },
   placeButton: { height: 34, borderRadius: 17, backgroundColor: '#FFF0F8', alignItems: 'center', justifyContent: 'center', marginTop: 9 },
   placeButtonText: { color: colors.hotPink, fontWeight: '900', fontSize: 12 },
-  peopleRow: { flexDirection: 'row', gap: 10 },
+  peopleRow: { flexDirection: 'row', gap: 10, marginHorizontal: 24 },
   personCard: { flex: 1, backgroundColor: colors.card, borderRadius: 24, padding: 12, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
   personImage: { width: 72, height: 72, borderRadius: 20, marginBottom: 8 },
   personName: { color: colors.ink, fontSize: 13, fontWeight: '900' },
@@ -894,29 +962,29 @@ const styles = StyleSheet.create({
   darkChipActive: { backgroundColor: colors.white },
   darkChipText: { color: colors.white, fontSize: 12, fontWeight: '800' },
   darkChipTextActive: { color: colors.ink },
-  profileHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
+  profileHead: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 24, marginBottom: 18 },
   profileAvatar: { width: 92, height: 92, borderRadius: 46, marginRight: 16, borderWidth: 4, borderColor: colors.card },
   profileName: { color: colors.ink, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   profileHandle: { color: colors.muted, fontSize: 13, fontWeight: '700', marginTop: 2 },
   profileBio: { color: colors.text, fontSize: 14, lineHeight: 20, marginTop: 9, fontWeight: '500' },
-  statsRow: { flexDirection: 'row', marginVertical: 8 },
+  statsRow: { flexDirection: 'row', marginHorizontal: 24, marginVertical: 8 },
   stat: { flex: 1, alignItems: 'center' },
   statValue: { color: colors.ink, fontSize: 17, fontWeight: '900' },
   statLabel: { color: colors.muted, fontSize: 12, fontWeight: '700', marginTop: 4 },
-  editButton: { marginTop: 10, height: 46, borderRadius: 999, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
+  editButton: { marginHorizontal: 24, marginTop: 10, height: 46, borderRadius: 999, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   editButtonText: { color: colors.ink, fontWeight: '900' },
-  profileTabs: { flexDirection: 'row', marginTop: 18, marginBottom: 12, backgroundColor: colors.card, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: colors.line },
+  profileTabs: { flexDirection: 'row', marginHorizontal: 24, marginTop: 18, marginBottom: 12, backgroundColor: colors.card, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: colors.line },
   profileTab: { flex: 1, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingVertical: 10 },
   profileTabActive: { backgroundColor: '#FFF0F8' },
   profileTabText: { color: colors.text, fontSize: 12, fontWeight: '800' },
   profileTabTextActive: { color: colors.hotPink, fontWeight: '900' },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  gridImage: { width: (width - 38) / 3, height: (width - 38) / 3, borderRadius: 3, marginBottom: 3, backgroundColor: colors.line },
-  inlineCreate: { flexDirection: 'row', gap: 9, marginBottom: 16 },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginHorizontal: 24 },
+  gridImage: { width: (width - 52) / 3, height: (width - 52) / 3, borderRadius: 3, marginBottom: 3, backgroundColor: colors.line },
+  inlineCreate: { flexDirection: 'row', gap: 9, marginHorizontal: 24, marginBottom: 16 },
   inlineInput: { flex: 1, height: 48, borderRadius: 24, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 14, color: colors.ink, fontWeight: '700' },
   inlineButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.hotPink, alignItems: 'center', justifyContent: 'center' },
   inlineButtonText: { color: colors.white, fontSize: 24, fontWeight: '900' },
-  collectionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  collectionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginHorizontal: 24 },
   collectionCard: { width: '48.5%', height: 180, borderRadius: 24, overflow: 'hidden', marginBottom: 12, backgroundColor: colors.line },
   collectionWide: { width: '100%', height: 220 },
   collectionImage: { borderRadius: 24 },
@@ -939,6 +1007,17 @@ const styles = StyleSheet.create({
   sheet: { width: '100%', borderRadius: 30, backgroundColor: colors.bg, padding: 18, borderWidth: 1, borderColor: colors.line, ...shadow },
   sheetTitle: { color: colors.ink, fontSize: 22, fontWeight: '900', letterSpacing: -0.4, marginBottom: 8 },
   sheetText: { color: colors.muted, fontSize: 14, lineHeight: 20, marginBottom: 10, fontWeight: '600' },
+  createUrlInput: { height: 44, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.12)', color: colors.white, paddingHorizontal: 14, marginTop: 10, fontWeight: '700', fontSize: 13 },
+  emptyState: { marginHorizontal: 24, marginTop: 18, padding: 24, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.86)', borderWidth: 1, borderColor: colors.line, alignItems: 'center', ...shadow, shadowOpacity: 0.08 },
+  emptyLogo: { width: 56, height: 56, borderRadius: 18, marginBottom: 14 },
+  emptyTitle: { color: colors.ink, fontSize: 20, fontWeight: '900', letterSpacing: -0.3, textAlign: 'center' },
+  emptyText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 8, fontWeight: '600' },
+  emptyButton: { marginTop: 16, paddingHorizontal: 18, height: 44, borderRadius: 22, backgroundColor: colors.hotPink, alignItems: 'center', justifyContent: 'center' },
+  emptyButtonText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  videoEmpty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, backgroundColor: colors.black },
+  videoEmptyLogo: { width: 78, height: 78, borderRadius: 24, marginBottom: 20 },
+  videoEmptyTitle: { color: colors.white, fontSize: 26, fontWeight: '900', textAlign: 'center' },
+  videoEmptyText: { color: 'rgba(255,255,255,0.70)', fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 10, fontWeight: '600' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 14 },
   serverButton: { position: 'absolute', right: 16, top: TOP + 56, width: 44, height: 28, borderRadius: 14, backgroundColor: 'rgba(21,20,45,0.78)', alignItems: 'center', justifyContent: 'center' },
   serverButtonDark: { backgroundColor: 'rgba(255,255,255,0.24)' },
