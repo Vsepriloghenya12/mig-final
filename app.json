@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Миг",
-    "slug": "mig-native-app-v13-working",
-    "version": "0.13.0",
+    "slug": "mig-native-app-v18-fixes",
+    "version": "0.18.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FAFAFF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ru.mig.app",
@@ -32,11 +34,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAFF"
-      }
+      },
+      "versionCode": 18
     },
-    "web": { "favicon": "./assets/icon.png" },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
     "newArchEnabled": true,
     "scheme": "mig",
-    "extra": { "buildTarget": "v13-working-clean" }
+    "extra": {
+      "buildTarget": "v18-fixes"
+    }
   }
 }

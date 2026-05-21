@@ -1,6 +1,6 @@
 {
-  "name": "mig-native-app-v13-working",
-  "version": "0.13.0",
+  "name": "mig-native-app-v18-fixes",
+  "version": "0.18.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,8 @@
     "expo-image-picker": "~17.0.8",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "@react-native-async-storage/async-storage": "2.2.0"
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo-av": "~16.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

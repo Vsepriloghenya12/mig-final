@@ -1,11 +1,22 @@
-import { assets } from '../assets';
+export function mediaUrl(item) {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  return String(item.mediaUrl || item.imageUrl || item.avatarUrl || item.videoUrl || '').trim();
+}
 
-export function mediaSource(item, fallback = 'lake') {
-  if (!item) return assets[fallback] || assets.lake;
-  if (typeof item === 'string' && /^https?:\/\//i.test(item)) return { uri: item };
-  const url = String(item.mediaUrl || item.imageUrl || item.avatarUrl || item.videoUrl || '').trim();
-  if (/^https?:\/\//i.test(url)) return { uri: url };
-  return assets[item.imageKey] || assets[item.avatarKey] || assets[fallback] || assets.lake;
+export function mediaSource(item) {
+  const url = mediaUrl(item);
+  return /^https?:\/\//i.test(url) ? { uri: url } : null;
+}
+
+export function isVideoMedia(item) {
+  const type = String(item?.mediaType || item?.type || '').toLowerCase();
+  const url = mediaUrl(item).toLowerCase();
+  return type === 'video' || /\.(mp4|mov|m4v|webm)(\?|$)/.test(url);
+}
+
+export function hasRealMedia(item) {
+  return !!mediaSource(item);
 }
 
 export function initials(name = 'М') {

@@ -1,14 +1,15 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { MediaView } from '../media/MediaView';
 import { colors } from '../../theme';
-import { mediaSource } from '../../utils/media';
 import { GameMessage } from './GameMessage';
 
 export function ChatBubble({ message, currentUserId, onGame }) {
   const mine = message.userId === currentUserId;
   if (message.type === 'game') return <View style={[styles.row, mine && styles.mine]}><GameMessage game={message.game} currentUserId={currentUserId} onAccept={() => onGame('accept', message.game.id)} onDecline={() => onGame('decline', message.game.id)} onMove={(choice) => onGame('move', message.game.id, choice)} /></View>;
+  const media = message.type === 'photo' || message.type === 'video';
   return <View style={[styles.row, mine && styles.mine]}><View style={[styles.bubble, mine && styles.myBubble]}>
-    {message.type === 'photo' || message.type === 'video' ? <Image source={mediaSource(message)} style={styles.media} /> : null}
+    {media ? <MediaView item={message} style={styles.media} controls muted={false} /> : null}
     {message.text ? <Text style={[styles.text, mine && styles.myText]}>{message.text}</Text> : null}
   </View></View>;
 }
@@ -20,5 +21,5 @@ const styles = StyleSheet.create({
   myBubble: { backgroundColor: colors.hot, borderColor: colors.hot },
   text: { color: colors.text, fontSize: 15, lineHeight: 21 },
   myText: { color: colors.white, fontWeight: '700' },
-  media: { width: 210, height: 210, borderRadius: 18, marginBottom: 8, backgroundColor: colors.faint }
+  media: { width: 210, height: 210, borderRadius: 18, marginBottom: 8, backgroundColor: colors.faint, overflow: 'hidden' }
 });

@@ -8,7 +8,7 @@ import { colors, topInset } from '../../theme';
 
 export function MessagesScreen({ api, data, openChat, setActive }) {
   const [dialogs, setDialogs] = useState([]);
-  const [users, setUsers] = useState(data?.users || []);
+  const [users] = useState(data?.users || []);
   const load = async () => setDialogs((await chatApi.dialogs(api)).dialogs || []);
   useEffect(() => { load(); }, []);
   const start = async (user) => { const d = await chatApi.openDialog(api, user.id); openChat(d.dialog.id, user); };

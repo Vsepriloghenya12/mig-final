@@ -7,6 +7,7 @@ export const postActions = {
 
 export const videoActions = {
   like: (api, videoId) => api.post(`/api/videos/${videoId}/like`),
+  comment: (api, videoId, text) => api.post(`/api/videos/${videoId}/comments`, { text }),
   create: (api, payload) => api.post('/api/videos', payload)
 };
 
@@ -22,8 +23,4 @@ export const placeActions = {
 export const profileActions = {
   update: (api, payload) => api.post('/api/profile', payload),
   follow: (api, targetId) => api.post('/api/follow', { targetId })
-};
-
-export const collectionActions = {
-  create: (api, payload) => api.post('/api/collections', payload)
 };

@@ -1,6 +1,6 @@
 {
-  "name": "mig-backend-v13",
-  "version": "0.13.0",
+  "name": "mig-backend-v18",
+  "version": "0.18.0",
   "private": true,
   "main": "index.js",
   "scripts": {

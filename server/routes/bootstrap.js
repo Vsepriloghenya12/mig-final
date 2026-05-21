@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/bootstrap', (req, res) => {
   const db = readDb();
-  const userId = req.query.userId || 'ivan';
+  const userId = req.query.userId || `user_${Date.now()}`;
   getUser(db, userId); writeDb(db);
   res.json(shape(db, userId));
 });
