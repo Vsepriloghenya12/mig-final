@@ -1,47 +1,21 @@
-# Railway deploy — Миг backend
+# Railway deploy
 
-## Вариант через GitHub
+Пушьте всю папку проекта в GitHub, кроме того, что исключено в `.gitignore`.
 
-1. Создайте новый GitHub repo.
-2. Загрузите туда весь проект.
-3. Railway → New Project → Deploy from GitHub repo.
-4. Выберите репозиторий.
-5. Railway использует `Dockerfile` из корня и запустит backend из папки `server`.
+В Railway:
 
-## Переменные Railway
+- New Project → Deploy from GitHub repo
+- Root Directory: пусто
+- Variables:
+  - NODE_ENV=production
+  - OWNER_TOKEN=ваш_токен
+  - DATA_DIR=/data
+  - PUBLIC_URL=https://ваш-домен.up.railway.app
+- Volume mount path: /data
 
-Обязательно:
-
-```text
-OWNER_TOKEN=придумайте_сложный_токен
-NODE_ENV=production
-```
-
-Опционально:
+Проверка:
 
 ```text
-DATA_DIR=/data
-PUBLIC_URL=https://YOUR-RAILWAY-APP.up.railway.app
-```
-
-## Постоянное хранение
-
-Если не подключить Volume, JSON-база может сбрасываться при пересборках. Для MVP лучше добавить Volume:
-
-```text
-Mount path: /data
-Variable: DATA_DIR=/data
-```
-
-## Проверка после деплоя
-
-```text
-https://YOUR-RAILWAY-APP.up.railway.app/api/health
-https://YOUR-RAILWAY-APP.up.railway.app/owner
-```
-
-В приложении используйте URL без `/api`:
-
-```text
-https://YOUR-RAILWAY-APP.up.railway.app
+https://ваш-домен.up.railway.app/api/health
+https://ваш-домен.up.railway.app/owner
 ```
