@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { BottomNav } from './components/BottomNav';
 import { useIdentity } from './hooks/useIdentity';
 import { useMigData } from './hooks/useMigData';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { CreateScreen } from './screens/CreateScreen';
 import { FeedScreen } from './screens/FeedScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -15,8 +16,9 @@ import { MessagesScreen } from './screens/messages/MessagesScreen';
 import { colors } from './theme';
 
 export default function App() {
-  const { identity, ready, save } = useIdentity();
+  const { identity, ready, save, clear } = useIdentity();
   const { api, data, loading, error, reload } = useMigData(identity?.id);
+  usePushNotifications(api, identity?.id);
   const [active, setActive] = useState('feed');
   const [chat, setChat] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
@@ -37,7 +39,7 @@ export default function App() {
   if (active === 'createVideo') screen = <CreateScreen {...common} initial="video" />;
   if (active === 'createPlace') screen = <CreateScreen {...common} initial="place" />;
   if (active === 'nearby') screen = <NearbyScreen {...common} />;
-  if (active === 'profile') screen = <ProfileScreen {...common} />;
+  if (active === 'profile') screen = <ProfileScreen {...common} onLogout={clear} />;
   return <View style={styles.app}>{screen}<BottomNav active={baseTab(active)} setActive={setActive} /></View>;
 }
 function baseTab(active) { return active.startsWith('create') ? 'create' : active; }

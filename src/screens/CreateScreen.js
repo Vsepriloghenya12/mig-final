@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { placeActions, postActions, storyActions, videoActions } from '../api/actions';
 import { assets } from '../assets';
+import { MediaView } from '../components/media/MediaView';
 import { TextField } from '../components/ui/TextField';
 import { colors, topInset } from '../theme';
+import { MEDIA_LIMITS, bytesLabel } from '../config/mediaLimits';
 import { pickAndUpload } from '../utils/picker';
 
 const tabs = [['post','Пост'], ['story','История'], ['video','Видео'], ['place','Место']];
@@ -18,6 +20,7 @@ export function CreateScreen({ api, reload, setActive, initial = 'post' }) {
   const [busy, setBusy] = useState(false);
   const isVideo = kind === 'video';
   const choose = async () => setMedia(await pickAndUpload(api, isVideo ? 'video' : 'image'));
+  const limitsText = isVideo ? `до ${MEDIA_LIMITS.videoMaxDurationSec} сек · до ${bytesLabel(MEDIA_LIMITS.videoMaxBytes)}` : `сжатие до ${MEDIA_LIMITS.imageMaxDimension}px`;
   const submit = async () => {
     if (['post','story','video'].includes(kind) && !media?.url) {
       Alert.alert('Нужно выбрать медиа', isVideo ? 'Выберите видео из галереи.' : 'Выберите фото из галереи.');
@@ -26,10 +29,11 @@ export function CreateScreen({ api, reload, setActive, initial = 'post' }) {
     if (!caption.trim() && kind === 'place') { Alert.alert('Название места', 'Введите название места.'); return; }
     setBusy(true);
     try {
-      const payload = { caption, location, imageUrl: media?.url, videoUrl: media?.url, mood, title: caption };
+      const isPickedVideo = media?.mediaType === 'video';
+      const payload = { caption, location, imageUrl: isPickedVideo ? '' : media?.url, videoUrl: isPickedVideo ? media?.url : '', mood, title: caption };
       if (kind === 'post') await postActions.create(api, payload);
       if (kind === 'story') await storyActions.create(api, payload);
-      if (kind === 'video') await videoActions.create(api, payload);
+      if (kind === 'video') await videoActions.create(api, { ...payload, videoUrl: media?.url });
       if (kind === 'place') await placeActions.create(api, { name: caption, address: location, imageUrl: media?.url });
       await reload(); setActive(kind === 'video' ? 'video' : kind === 'place' ? 'nearby' : 'feed');
     } catch (e) { Alert.alert('Не удалось сохранить', e.message); }
@@ -42,7 +46,9 @@ export function CreateScreen({ api, reload, setActive, initial = 'post' }) {
     <TextField label={kind === 'place' ? 'Название места' : 'Текст'} value={caption} onChangeText={setCaption} placeholder="Напишите что-нибудь" multiline />
     <TextField label="Локация / описание" value={location} onChangeText={setLocation} placeholder="Город, место или описание" />
     {kind === 'story' ? <View style={styles.moods}>{moods.map(([key, label]) => <Pressable key={key} onPress={() => setMood(key)} style={styles.mood}><Text style={[styles.moodText, mood === key && styles.moodOn]}>{label}</Text></Pressable>)}</View> : null}
-    <Pressable onPress={choose} style={styles.media}><Text style={styles.mediaText}>{media ? 'Медиа выбрано' : isVideo ? 'Выбрать видео из галереи' : 'Выбрать фото из галереи'}</Text></Pressable>
+    {media?.url ? <MediaView item={media} style={styles.preview} controls muted={false} /> : null}
+    <Pressable onPress={choose} style={styles.media}><Text style={styles.mediaText}>{media ? 'Заменить медиа' : isVideo ? 'Выбрать видео из галереи' : 'Выбрать фото из галереи'}</Text></Pressable>
+    <Text style={styles.limit}>{limitsText}</Text>
     <Pressable disabled={busy} onPress={submit} style={[styles.submit, busy && { opacity: .6 }]}><Text style={styles.submitText}>{busy ? 'Сохраняем...' : 'Опубликовать'}</Text></Pressable>
   </ScrollView></View>;
 }
@@ -58,8 +64,10 @@ const styles = StyleSheet.create({
   tabText: { color: colors.muted, fontWeight: '900', fontSize: 15 },
   tabTextOn: { color: colors.hot },
   underline: { height: 3, borderRadius: 2, backgroundColor: colors.hot, marginTop: 6 },
+  preview: { height: 210, borderRadius: 22, overflow: 'hidden', backgroundColor: colors.faint, marginBottom: 12 },
   media: { height: 48, borderRadius: 24, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   mediaText: { color: colors.ink, fontWeight: '900' },
+  limit: { color: colors.muted, fontWeight: '700', fontSize: 12, marginTop: 7, textAlign: 'center' },
   moods: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 14 },
   mood: { paddingVertical: 5 },
   moodText: { color: colors.muted, fontWeight: '800' },

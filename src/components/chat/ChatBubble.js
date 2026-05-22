@@ -1,17 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MediaView } from '../media/MediaView';
 import { colors } from '../../theme';
 import { GameMessage } from './GameMessage';
 
-export function ChatBubble({ message, currentUserId, onGame }) {
+export function ChatBubble({ message, currentUserId, onGame, onReport }) {
   const mine = message.userId === currentUserId;
-  if (message.type === 'game') return <View style={[styles.row, mine && styles.mine]}><GameMessage game={message.game} currentUserId={currentUserId} onAccept={() => onGame('accept', message.game.id)} onDecline={() => onGame('decline', message.game.id)} onMove={(choice) => onGame('move', message.game.id, choice)} /></View>;
+  if (message.type === 'game') return <View style={[styles.row, mine && styles.mine]}><Pressable onLongPress={() => onReport?.(message)}><GameMessage game={message.game} currentUserId={currentUserId} onAccept={() => onGame('accept', message.game.id)} onDecline={() => onGame('decline', message.game.id)} onMove={(choice) => onGame('move', message.game.id, choice)} /></Pressable></View>;
   const media = message.type === 'photo' || message.type === 'video';
-  return <View style={[styles.row, mine && styles.mine]}><View style={[styles.bubble, mine && styles.myBubble]}>
+  return <View style={[styles.row, mine && styles.mine]}><Pressable onLongPress={() => onReport?.(message)} style={[styles.bubble, mine && styles.myBubble]}>
     {media ? <MediaView item={message} style={styles.media} controls muted={false} /> : null}
     {message.text ? <Text style={[styles.text, mine && styles.myText]}>{message.text}</Text> : null}
-  </View></View>;
+  </Pressable></View>;
 }
 
 const styles = StyleSheet.create({

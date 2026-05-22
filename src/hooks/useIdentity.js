@@ -15,5 +15,6 @@ export function useIdentity() {
     await AsyncStorage.setItem(KEY, JSON.stringify(next));
     setIdentity(next);
   };
-  return { identity, ready, save };
+  const clear = async () => { await AsyncStorage.removeItem(KEY); setIdentity(null); };
+  return { identity, ready, save, clear }; 
 }

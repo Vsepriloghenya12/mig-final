@@ -22,5 +22,6 @@ export const placeActions = {
 
 export const profileActions = {
   update: (api, payload) => api.post('/api/profile', payload),
-  follow: (api, targetId) => api.post('/api/follow', { targetId })
+  follow: (api, targetId) => api.post('/api/follow', { targetId }),
+  deleteAccount: (api) => api.post('/api/account/delete')
 };

@@ -7,6 +7,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Icon } from '../../components/ui/Icon';
 import { colors, topInset } from '../../theme';
 import { pickAndUpload } from '../../utils/picker';
+import { blockUser, reportContent } from '../../utils/moderation';
 
 export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -19,8 +20,9 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
   const media = async (kind) => { setMenu(false); const file = await pickAndUpload(api, kind); if (file) { await chatApi.sendMedia(api, dialogId, file); await load(); } };
   const game = async (kind) => { setMenu(false); await chatApi.startGame(api, dialogId, kind); await load(); };
   const onGame = async (action, id, choice) => { try { if (action === 'accept') await chatApi.acceptGame(api, id); if (action === 'decline') await chatApi.declineGame(api, id); if (action === 'move') await chatApi.moveGame(api, id, choice); await load(); } catch (e) { Alert.alert('Игра', e.message); } };
-  return <View style={styles.wrap}><View style={styles.head}><Pressable onPress={onBack}><Icon name="back" size={34} /></Pressable><Avatar user={user} size={42} /><Text style={styles.title}>{user?.name || 'Диалог'}</Text></View>
-    <ScrollView ref={scroll} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })} contentContainerStyle={styles.list}>{messages.map((m) => <ChatBubble key={m.id} message={m} currentUserId={currentUserId} onGame={onGame} />)}</ScrollView>
+  const reportMessage = (msg) => reportContent(api, { targetType: 'message', targetId: msg.id, targetUserId: msg.userId });
+  return <View style={styles.wrap}><View style={styles.head}><Pressable onPress={onBack}><Icon name="back" size={34} /></Pressable><Avatar user={user} size={42} /><Text style={styles.title}>{user?.name || 'Диалог'}</Text><View style={{ flex: 1 }} /><Pressable onPress={() => reportContent(api, { targetType: 'profile', targetId: user?.id, targetUserId: user?.id })}><Text style={styles.headBtn}>!</Text></Pressable><Pressable onPress={() => blockUser(api, user?.id, onBack)}><Text style={styles.headBtn}>Блок</Text></Pressable></View>
+    <ScrollView ref={scroll} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })} contentContainerStyle={styles.list}>{messages.map((m) => <ChatBubble key={m.id} message={m} currentUserId={currentUserId} onGame={onGame} onReport={reportMessage} />)}</ScrollView>
     <View style={styles.inputRow}><Pressable onPress={() => setMenu(true)} style={styles.plus}><Icon name="plus" color={colors.white} /></Pressable><TextInput value={text} onChangeText={setText} placeholder="Сообщение" placeholderTextColor={colors.muted} style={styles.input} /><Pressable onPress={send} style={styles.send}><Icon name="send" color={colors.white} size={18} /></Pressable></View>
     <AttachMenu visible={menu} onClose={() => setMenu(false)} onPhoto={() => media('image')} onVideo={() => media('video')} onGame={game} />
   </View>;
@@ -35,6 +37,7 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
   head: { paddingTop: topInset + 8, paddingHorizontal: 14, height: topInset + 64, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: colors.line },
   title: { color: colors.ink, fontSize: 20, fontWeight: '900' },
+  headBtn: { color: colors.hot, fontSize: 12, fontWeight: '900' },
   list: { padding: 14, paddingBottom: 98 },
   inputRow: { position: 'absolute', left: 12, right: 12, bottom: 14, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: colors.white, borderRadius: 28, borderWidth: 1, borderColor: colors.line, padding: 6 },
   plus: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center' },

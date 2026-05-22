@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Миг",
-    "slug": "mig-native-app-v18-fixes",
-    "version": "0.18.0",
+    "slug": "mig-native-app-v23-push-notifications",
+    "version": "0.23.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,13 +29,14 @@
         "INTERNET",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAFF"
       },
-      "versionCode": 18
+      "versionCode": 23
     },
     "web": {
       "favicon": "./assets/icon.png"
@@ -43,7 +44,15 @@
     "newArchEnabled": true,
     "scheme": "mig",
     "extra": {
-      "buildTarget": "v18-fixes"
-    }
+      "buildTarget": "v23-push-notifications"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#F22D8F"
+        }
+      ]
+    ]
   }
 }

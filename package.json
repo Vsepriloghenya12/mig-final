@@ -1,6 +1,6 @@
 {
-  "name": "mig-native-app-v18-fixes",
-  "version": "0.18.0",
+  "name": "mig-native-app-v23-push-notifications",
+  "version": "0.23.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,10 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo-av": "~16.0.7"
+    "expo-av": "~16.0.7",
+    "expo-image-manipulator": "~14.0.7",
+    "expo-notifications": "~0.32.12",
+    "expo-constants": "~18.0.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

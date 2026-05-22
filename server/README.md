@@ -1,22 +1,17 @@
 # Mig backend
 
-Express backend for the Mig native app.
+Set variables on Railway:
 
-Local:
+```text
+NODE_ENV=production
+OWNER_TOKEN=<strong-secret-token>
+DATA_DIR=/data
+PUBLIC_URL=https://your-app.up.railway.app
+```
+
+Run locally:
 
 ```bash
 npm install
-OWNER_TOKEN=mig-owner-demo npm start
-```
-
-Railway:
-
-- Dockerfile is in project root.
-- Set `OWNER_TOKEN`.
-- Optional persistent storage: `DATA_DIR=/data` with Railway Volume mounted to `/data`.
-
-Owner page:
-
-```text
-/owner
+npm start
 ```

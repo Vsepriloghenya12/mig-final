@@ -20,8 +20,15 @@ export function createApi(baseUrl = API_URL, userId) {
     }).then(parse),
     upload: async (asset) => {
       const form = new FormData();
-      const name = asset.fileName || `mig-${Date.now()}.${asset.type === 'video' ? 'mp4' : 'jpg'}`;
-      form.append('file', { uri: asset.uri, name, type: asset.mimeType || (asset.type === 'video' ? 'video/mp4' : 'image/jpeg') });
+      const isVideo = asset.type === 'video';
+      const name = asset.fileName || `mig-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
+      const type = asset.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg');
+      form.append('file', { uri: asset.uri, name, type });
+      form.append('userId', userId || '');
+      form.append('mediaType', isVideo ? 'video' : 'photo');
+      form.append('durationSec', String(asset.durationSec || Math.round((asset.duration || 0) / 1000) || 0));
+      form.append('width', String(asset.width || 0));
+      form.append('height', String(asset.height || 0));
       const response = await fetch(`${root}/api/media`, { method: 'POST', body: form });
       return parse(response);
     }
