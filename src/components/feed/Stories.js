@@ -26,12 +26,12 @@ export function Stories({ stories = [], currentUser, onAdd, onOpen }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingTop: 5, paddingBottom: 8, backgroundColor: colors.bg },
-  row: { paddingHorizontal: 16, gap: 14 },
-  story: { width: 68, alignItems: 'center' },
-  ring: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, padding: 3, overflow: 'hidden', backgroundColor: colors.white },
+  wrap: { paddingTop: 9, paddingBottom: 13, backgroundColor: colors.bg },
+  row: { paddingHorizontal: 16, gap: 13 },
+  story: { width: 70, alignItems: 'center' },
+  ring: { width: 66, height: 66, borderRadius: 33, borderWidth: 3, padding: 3, overflow: 'hidden', backgroundColor: colors.white, shadowColor: '#1A1433', shadowOpacity: .08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   photo: { width: '100%', height: '100%', borderRadius: 28 },
   plus: { position: 'absolute', top: 47, right: 5, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white },
   plusText: { color: colors.white, fontWeight: '900', marginTop: -1 },
-  name: { marginTop: 7, fontSize: 12, color: colors.text, fontWeight: '800' }
+  name: { marginTop: 7, fontSize: 12, color: colors.text, fontWeight: '900' }
 });

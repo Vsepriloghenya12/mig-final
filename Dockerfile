@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app/server
 
 COPY server/package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+RUN npm ci --omit=dev --no-audit --no-fund
 
 COPY server ./
 

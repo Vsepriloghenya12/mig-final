@@ -3,9 +3,8 @@ node_modules/
 dist/
 dist-android/
 web-build/
-package-lock.json
 server/node_modules/
-server/package-lock.json
 server/data/db.json
+server/data/uploads/
 .env
 *.log

@@ -8,13 +8,13 @@ export function Header({ onMessages }) {
   return (
     <View style={styles.wrap}>
       <Image source={assets.headerLogo} style={styles.logo} resizeMode="contain" />
-      <Pressable onPress={onMessages} hitSlop={12} style={styles.button}><MailIcon /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Открыть сообщения" onPress={onMessages} hitSlop={12} style={styles.button}><MailIcon /></Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingTop: topInset, height: topInset + 58, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.bg },
+  wrap: { paddingTop: topInset, height: topInset + 64, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(251,250,255,.96)', borderBottomWidth: 1, borderBottomColor: 'rgba(236,232,246,.72)' },
   logo: { width: 116, height: 50 },
-  button: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }
+  button: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' }
 });

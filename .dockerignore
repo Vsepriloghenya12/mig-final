@@ -4,5 +4,8 @@ server/node_modules
 .git
 *.zip
 npm-debug.log
-package-lock.json
-server/package-lock.json
+dist
+dist-android
+web-build
+server/data
+.env

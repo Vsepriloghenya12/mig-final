@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createApi, loadBootstrap } from '../api/client';
 import { API_URL } from '../config';
 
-export function useMigData(userId) {
+export function useMigData(identity) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const api = useMemo(() => createApi(API_URL, userId), [userId]);
+  const api = useMemo(() => createApi(API_URL, identity), [identity]);
+  const userId = identity?.id || identity;
   const reload = useCallback(async () => {
     if (!userId) return;
     setLoading(true); setError('');

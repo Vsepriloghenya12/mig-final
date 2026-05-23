@@ -1,1 +1,109 @@
-<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Миг владелец</title><style>body{font-family:system-ui;margin:0;background:#fbfaff;color:#15142d}.wrap{max-width:1100px;margin:auto;padding:28px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.card{background:white;border:1px solid #eee8fa;border-radius:24px;padding:20px;margin:14px 0;box-shadow:0 18px 50px #27195a12}.stat{font-size:28px;font-weight:900;color:#f22d8f}input,button,select{height:42px;border-radius:14px;border:1px solid #e8e5f2;padding:0 12px}button{background:#f22d8f;color:white;font-weight:800;border:0;margin:4px}.muted{color:#7d7890}.report{border-top:1px solid #eee8fa;padding:12px 0}pre{white-space:pre-wrap;background:#f6f2ff;border-radius:18px;padding:16px;overflow:auto}</style><div class="wrap"><h1>Миг — модерация</h1><div class="card"><input id="token" placeholder="OWNER_TOKEN"><button onclick="load()">Загрузить</button><button onclick="resetDb()">Сбросить базу</button></div><div id="stats" class="grid"></div><div class="card"><h2>Жалобы</h2><div id="reports" class="muted">Введите токен</div></div><div class="card"><h2>База</h2><pre id="out">Введите токен и загрузите данные.</pre></div></div><script>let db={};async function req(p,o={}){let t=token.value;let r=await fetch('/api/'+p,{...o,headers:{'Content-Type':'application/json','x-owner-token':t},body:o.body?JSON.stringify(o.body):undefined});let d=await r.json();if(!r.ok)throw Error(d.error);return d}function box(n,v){return '<div class="card"><div class="stat">'+v+'</div><b>'+n+'</b></div>'}async function load(){try{db=await req('owner/data');stats.innerHTML=box('Пользователи',db.users.length)+box('Посты',db.posts.length)+box('Истории',db.stories.length)+box('Видео',db.videos.length)+box('Места',db.places.length)+box('Жалобы',db.reports.length)+box('Открытые',db.reports.filter(r=>r.status==='open').length)+box('Уведомления',(db.notifications||[]).length);renderReports();out.textContent=JSON.stringify(db,null,2)}catch(e){alert(e.message)}}function renderReports(){let list=(db.reports||[]).slice().reverse();reports.innerHTML=list.length?list.map(r=>'<div class="report"><b>'+r.targetType+'</b> · '+r.reason+' · '+r.status+'<br><span class="muted">target: '+r.targetId+' · user: '+(r.targetUserId||'')+'</span><br><button onclick="resolveReport(\''+r.id+'\')">Закрыть</button><button onclick="deleteContent(\''+r.targetType+'\',\''+r.targetId+'\')">Удалить контент</button>'+(r.targetUserId?'<button onclick="ownerBlock(\''+r.targetUserId+'\')">Блок автора</button>':'')+'</div>').join(''):'Жалоб нет'}async function resolveReport(id){await req('owner/reports/'+id+'/resolve',{method:'POST',body:{resolution:'reviewed'}});load()}async function deleteContent(t,id){if(confirm('Удалить контент?')){await req('owner/content/'+t+'/'+id+'/delete',{method:'POST',body:{reason:'report'}});load()}}async function ownerBlock(id){if(confirm('Заблокировать пользователя?')){await req('owner/users/'+id+'/block',{method:'POST',body:{block:true,reason:'report'}});load()}}async function resetDb(){if(confirm('Сбросить базу?')){await req('owner/reset',{method:'POST'});load()}}</script></html>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Миг владелец</title>
+  <style>
+    body{font-family:system-ui;margin:0;background:#fbfaff;color:#15142d}.wrap{max-width:1100px;margin:auto;padding:28px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.card{background:white;border:1px solid #eee8fa;border-radius:24px;padding:20px;margin:14px 0;box-shadow:0 18px 50px #27195a12}.stat{font-size:28px;font-weight:900;color:#f22d8f}input,button,select{height:42px;border-radius:14px;border:1px solid #e8e5f2;padding:0 12px}button{background:#f22d8f;color:white;font-weight:800;border:0;margin:4px}.muted{color:#7d7890}.report{border-top:1px solid #eee8fa;padding:12px 0}.report-actions{margin-top:8px}pre{white-space:pre-wrap;background:#f6f2ff;border-radius:18px;padding:16px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Миг — модерация</h1>
+    <div class="card"><input id="token" placeholder="OWNER_TOKEN"><button id="loadBtn">Загрузить</button><button id="resetBtn">Сбросить базу</button></div>
+    <div id="stats" class="grid"></div>
+    <div class="card"><h2>Жалобы</h2><div id="reports" class="muted">Введите токен</div></div>
+    <div class="card"><h2>База</h2><pre id="out">Введите токен и загрузите данные.</pre></div>
+  </div>
+  <script>
+    let db = {};
+    const tokenEl = document.getElementById('token');
+    const statsEl = document.getElementById('stats');
+    const reportsEl = document.getElementById('reports');
+    const outEl = document.getElementById('out');
+    document.getElementById('loadBtn').addEventListener('click', load);
+    document.getElementById('resetBtn').addEventListener('click', resetDb);
+
+    async function req(p, o = {}) {
+      const r = await fetch('/api/' + p, {
+        ...o,
+        headers: { 'Content-Type': 'application/json', 'x-owner-token': tokenEl.value },
+        body: o.body ? JSON.stringify(o.body) : undefined
+      });
+      const d = await r.json();
+      if (!r.ok) throw Error(d.error || 'Ошибка запроса');
+      return d;
+    }
+
+    function make(tag, className, text) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = text;
+      return el;
+    }
+
+    function statBox(name, value) {
+      const card = make('div', 'card');
+      card.append(make('div', 'stat', String(value)));
+      card.append(make('b', '', name));
+      return card;
+    }
+
+    async function load() {
+      try {
+        db = await req('owner/data');
+        statsEl.replaceChildren(
+          statBox('Пользователи', db.users.length),
+          statBox('Посты', db.posts.length),
+          statBox('Истории', db.stories.length),
+          statBox('Видео', db.videos.length),
+          statBox('Места', db.places.length),
+          statBox('Жалобы', db.reports.length),
+          statBox('Открытые', db.reports.filter((r) => r.status === 'open').length),
+          statBox('Уведомления', (db.notifications || []).length)
+        );
+        renderReports();
+        outEl.textContent = JSON.stringify(db, null, 2);
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function renderReports() {
+      const list = (db.reports || []).slice().reverse();
+      reportsEl.classList.toggle('muted', !list.length);
+      if (!list.length) {
+        reportsEl.textContent = 'Жалоб нет';
+        return;
+      }
+      const nodes = list.map((r) => {
+        const row = make('div', 'report');
+        const title = make('b', '', r.targetType || 'unknown');
+        row.append(title, document.createTextNode(' · ' + (r.reason || '') + ' · ' + (r.status || '')));
+        row.append(document.createElement('br'));
+        row.append(make('span', 'muted', 'target: ' + (r.targetId || '') + ' · user: ' + (r.targetUserId || '')));
+        const actions = make('div', 'report-actions');
+        actions.append(button('Закрыть', () => resolveReport(r.id)));
+        actions.append(button('Удалить контент', () => deleteContent(r.targetType, r.targetId)));
+        if (r.targetUserId) actions.append(button('Блок автора', () => ownerBlock(r.targetUserId)));
+        row.append(actions);
+        return row;
+      });
+      reportsEl.replaceChildren(...nodes);
+    }
+
+    function button(text, onClick) {
+      const el = make('button', '', text);
+      el.type = 'button';
+      el.addEventListener('click', onClick);
+      return el;
+    }
+
+    async function resolveReport(id) { await req('owner/reports/' + encodeURIComponent(id) + '/resolve', { method: 'POST', body: { resolution: 'reviewed' } }); load(); }
+    async function deleteContent(t, id) { if (confirm('Удалить контент?')) { await req('owner/content/' + encodeURIComponent(t) + '/' + encodeURIComponent(id) + '/delete', { method: 'POST', body: { reason: 'report' } }); load(); } }
+    async function ownerBlock(id) { if (confirm('Заблокировать пользователя?')) { await req('owner/users/' + encodeURIComponent(id) + '/block', { method: 'POST', body: { block: true, reason: 'report' } }); load(); } }
+    async function resetDb() { if (confirm('Сбросить базу?')) { await req('owner/reset', { method: 'POST' }); load(); } }
+  </script>
+</body>
+</html>

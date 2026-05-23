@@ -4,7 +4,7 @@ import { placeActions, postActions, storyActions, videoActions } from '../api/ac
 import { assets } from '../assets';
 import { MediaView } from '../components/media/MediaView';
 import { TextField } from '../components/ui/TextField';
-import { colors, topInset } from '../theme';
+import { bottomInset, buttonShadow, cardShadow, colors, topInset } from '../theme';
 import { MEDIA_LIMITS, bytesLabel } from '../config/mediaLimits';
 import { pickAndUpload } from '../utils/picker';
 
@@ -42,36 +42,40 @@ export function CreateScreen({ api, reload, setActive, initial = 'post' }) {
   return <View style={styles.wrap}><View style={styles.blob} /><ScrollView contentContainerStyle={styles.content}>
     <Image source={assets.headerLogo} style={styles.logo} resizeMode="contain" />
     <Text style={styles.title}>Добавить Миг</Text>
-    <View style={styles.tabs}>{tabs.map(([key, label]) => <Pressable key={key} onPress={() => setKind(key)} style={styles.tab}><Text style={[styles.tabText, kind === key && styles.tabTextOn]}>{label}</Text>{kind === key ? <View style={styles.underline} /> : null}</Pressable>)}</View>
-    <TextField label={kind === 'place' ? 'Название места' : 'Текст'} value={caption} onChangeText={setCaption} placeholder="Напишите что-нибудь" multiline />
-    <TextField label="Локация / описание" value={location} onChangeText={setLocation} placeholder="Город, место или описание" />
-    {kind === 'story' ? <View style={styles.moods}>{moods.map(([key, label]) => <Pressable key={key} onPress={() => setMood(key)} style={styles.mood}><Text style={[styles.moodText, mood === key && styles.moodOn]}>{label}</Text></Pressable>)}</View> : null}
-    {media?.url ? <MediaView item={media} style={styles.preview} controls muted={false} /> : null}
-    <Pressable onPress={choose} style={styles.media}><Text style={styles.mediaText}>{media ? 'Заменить медиа' : isVideo ? 'Выбрать видео из галереи' : 'Выбрать фото из галереи'}</Text></Pressable>
-    <Text style={styles.limit}>{limitsText}</Text>
-    <Pressable disabled={busy} onPress={submit} style={[styles.submit, busy && { opacity: .6 }]}><Text style={styles.submitText}>{busy ? 'Сохраняем...' : 'Опубликовать'}</Text></Pressable>
+    <View style={styles.tabs}>{tabs.map(([key, label]) => <Pressable key={key} accessibilityRole="tab" accessibilityState={{ selected: kind === key }} onPress={() => setKind(key)} style={[styles.tab, kind === key && styles.tabOn]}><Text style={[styles.tabText, kind === key && styles.tabTextOn]}>{label}</Text></Pressable>)}</View>
+    <View style={styles.card}>
+      <TextField label={kind === 'place' ? 'Название места' : 'Текст'} value={caption} onChangeText={setCaption} placeholder="Напишите что-нибудь" multiline />
+      <TextField label="Локация / описание" value={location} onChangeText={setLocation} placeholder="Город, место или описание" />
+      {kind === 'story' ? <View style={styles.moods}>{moods.map(([key, label]) => <Pressable key={key} accessibilityRole="button" accessibilityState={{ selected: mood === key }} onPress={() => setMood(key)} style={[styles.mood, mood === key && styles.moodActive]}><Text style={[styles.moodText, mood === key && styles.moodOn]}>{label}</Text></Pressable>)}</View> : null}
+      {media?.url ? <MediaView item={media} style={styles.preview} controls muted={false} /> : null}
+      <Pressable accessibilityRole="button" onPress={choose} style={styles.media}><Text style={styles.mediaText}>{media ? 'Заменить медиа' : isVideo ? 'Выбрать видео из галереи' : 'Выбрать фото из галереи'}</Text></Pressable>
+      <Text style={styles.limit}>{limitsText}</Text>
+      <Pressable accessibilityRole="button" disabled={busy} onPress={submit} style={[styles.submit, busy && { opacity: .6 }]}><Text style={styles.submitText}>{busy ? 'Сохраняем...' : 'Опубликовать'}</Text></Pressable>
+    </View>
   </ScrollView></View>;
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
   blob: { position: 'absolute', top: 75, right: -78, width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(123,92,255,.07)' },
-  content: { paddingTop: topInset + 18, paddingHorizontal: 22, paddingBottom: 125 },
+  content: { paddingTop: topInset + 18, paddingHorizontal: 18, paddingBottom: bottomInset + 116 },
   logo: { width: 112, height: 46, marginBottom: 16 },
-  title: { fontSize: 29, color: colors.ink, fontWeight: '900', marginBottom: 16 },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 18 },
-  tab: { paddingVertical: 6 },
+  title: { fontSize: 30, lineHeight: 36, color: colors.ink, fontWeight: '900', marginBottom: 16 },
+  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  tab: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 19, backgroundColor: colors.faint, borderWidth: 1, borderColor: 'transparent' },
+  tabOn: { backgroundColor: colors.softPink, borderColor: 'rgba(242,45,143,.16)' },
   tabText: { color: colors.muted, fontWeight: '900', fontSize: 15 },
   tabTextOn: { color: colors.hot },
-  underline: { height: 3, borderRadius: 2, backgroundColor: colors.hot, marginTop: 6 },
+  card: { borderRadius: 30, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, padding: 16, ...cardShadow },
   preview: { height: 210, borderRadius: 22, overflow: 'hidden', backgroundColor: colors.faint, marginBottom: 12 },
-  media: { height: 48, borderRadius: 24, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  media: { height: 50, borderRadius: 25, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.surfaceSoft, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   mediaText: { color: colors.ink, fontWeight: '900' },
   limit: { color: colors.muted, fontWeight: '700', fontSize: 12, marginTop: 7, textAlign: 'center' },
-  moods: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 14 },
-  mood: { paddingVertical: 5 },
+  moods: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  mood: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 17, backgroundColor: colors.faint },
+  moodActive: { backgroundColor: colors.softPink },
   moodText: { color: colors.muted, fontWeight: '800' },
   moodOn: { color: colors.hot },
-  submit: { height: 54, marginTop: 20, borderRadius: 27, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center', shadowColor: colors.hot, shadowOpacity: .24, shadowRadius: 18, elevation: 6 },
+  submit: { height: 54, marginTop: 20, borderRadius: 27, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center', ...buttonShadow },
   submitText: { color: colors.white, fontSize: 16, fontWeight: '900' }
 });

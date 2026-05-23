@@ -1,3 +1,4 @@
+import '../global.css';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { BottomNav } from './components/BottomNav';
@@ -17,7 +18,7 @@ import { colors } from './theme';
 
 export default function App() {
   const { identity, ready, save, clear } = useIdentity();
-  const { api, data, loading, error, reload } = useMigData(identity?.id);
+  const { api, data, loading, error, reload } = useMigData(identity);
   usePushNotifications(api, identity?.id);
   const [active, setActive] = useState('feed');
   const [chat, setChat] = useState(null);
@@ -43,9 +44,17 @@ export default function App() {
   return <View style={styles.app}>{screen}<BottomNav active={baseTab(active)} setActive={setActive} /></View>;
 }
 function baseTab(active) { return active.startsWith('create') ? 'create' : active; }
-function Center({ text }) { return <View style={styles.center}><ActivityIndicator color={colors.hot} /><Text style={styles.centerText}>{text}</Text></View>; }
+function Center({ text }) {
+  return <View style={styles.center}>
+    <View style={styles.centerCard}>
+      <ActivityIndicator color={colors.hot} size="large" />
+      <Text style={styles.centerText}>{text}</Text>
+    </View>
+  </View>;
+}
 const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: 24 },
-  centerText: { color: colors.ink, fontWeight: '900', marginTop: 12, textAlign: 'center' }
+  centerCard: { width: '100%', maxWidth: 320, minHeight: 150, borderRadius: 30, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', padding: 24, shadowColor: '#1A1433', shadowOpacity: .07, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 4 },
+  centerText: { color: colors.ink, fontWeight: '900', marginTop: 14, textAlign: 'center', fontSize: 15, lineHeight: 21 }
 });

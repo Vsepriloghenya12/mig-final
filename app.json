@@ -24,7 +24,7 @@
     },
     "android": {
       "package": "ru.mig.app",
-      "usesCleartextTraffic": true,
+      "usesCleartextTraffic": false,
       "permissions": [
         "INTERNET",
         "READ_MEDIA_IMAGES",
@@ -39,12 +39,14 @@
       "versionCode": 23
     },
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/icon.png",
+      "bundler": "metro"
     },
     "newArchEnabled": true,
     "scheme": "mig",
     "extra": {
-      "buildTarget": "v23-push-notifications"
+      "buildTarget": "v23-push-notifications",
+      "apiUrl": "https://mig-final-production.up.railway.app"
     },
     "plugins": [
       [

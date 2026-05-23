@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { DATA_DIR, UPLOAD_DIR } = require('./lib/db');
+const { DATA_DIR, UPLOAD_DIR, readDb } = require('./lib/db');
+const { requireUserSession } = require('./lib/auth');
 
 const app = express();
+app.locals.readDb = readDb;
 const PORT = Number(process.env.PORT || 4000);
 app.disable('x-powered-by');
 app.use(cors());
@@ -21,6 +23,7 @@ app.get('/moderation-policy', (req, res) => res.sendFile(path.join(__dirname, 'p
 app.get('/support', (req, res) => res.sendFile(path.join(__dirname, 'public', 'support.html')));
 app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/bootstrap'));
+app.use('/api', requireUserSession);
 app.use('/api', require('./routes/media'));
 app.use('/api', require('./routes/content'));
 app.use('/api', require('./routes/reactions'));
