@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Миг",
-    "slug": "mig-native-app-v23-push-notifications",
+    "name": "Близз",
+    "slug": "blizz-native-app",
     "version": "0.23.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,8 +18,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "ru.mig.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Миг использует галерею для публикации фото и видео.",
-        "NSCameraUsageDescription": "Миг может использовать камеру для публикаций."
+        "NSPhotoLibraryUsageDescription": "Близз использует галерею для публикации фото и видео.",
+        "NSCameraUsageDescription": "Близз может использовать камеру для публикаций.",
+        "NSMicrophoneUsageDescription": "Близз использует микрофон для записи видео."
       }
     },
     "android": {
@@ -30,7 +31,9 @@
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
         "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "CAMERA",
+        "RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -43,7 +46,7 @@
       "bundler": "metro"
     },
     "newArchEnabled": true,
-    "scheme": "mig",
+    "scheme": "blizz",
     "extra": {
       "buildTarget": "v23-push-notifications",
       "apiUrl": "https://mig-final-production.up.railway.app"

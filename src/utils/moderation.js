@@ -16,11 +16,3 @@ export function blockUser(api, targetId, after) {
     { text: 'Заблокировать', style: 'destructive', onPress: async () => { try { await moderationApi.blockUser(api, targetId); await after?.(); Alert.alert('Готово', 'Пользователь заблокирован.'); } catch (e) { Alert.alert('Ошибка', e.message); } } }
   ]);
 }
-
-export function showContentActions(api, target, after) {
-  Alert.alert('Действия с публикацией', 'Выберите действие', [
-    { text: 'Отмена', style: 'cancel' },
-    { text: 'Пожаловаться', onPress: () => reportContent(api, target) },
-    ...(target?.targetUserId ? [{ text: 'Заблокировать автора', style: 'destructive', onPress: () => blockUser(api, target.targetUserId, after) }] : [])
-  ]);
-}

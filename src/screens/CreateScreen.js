@@ -1,81 +1,234 @@
-import React, { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ResizeMode } from 'expo-av';
 import { placeActions, postActions, storyActions, videoActions } from '../api/actions';
 import { assets } from '../assets';
 import { MediaView } from '../components/media/MediaView';
-import { TextField } from '../components/ui/TextField';
-import { bottomInset, buttonShadow, cardShadow, colors, topInset } from '../theme';
-import { MEDIA_LIMITS, bytesLabel } from '../config/mediaLimits';
+import { Icon } from '../components/ui/MigIcon';
+import { Text } from '../components/ui/text';
+import { colors } from '../theme';
+import { useTheme } from '../theme-context';
+import { isVideoMedia } from '../utils/media';
 import { pickAndUpload } from '../utils/picker';
 
-const tabs = [['post','Пост'], ['story','История'], ['video','Видео'], ['place','Место']];
-const moods = [['joy','Радость'], ['love','Любовь'], ['calm','Спокойно'], ['energy','Энергия'], ['dream','Мечта']];
+const modes = {
+  post: { title: 'Пост', caption: 'Подпись', cta: 'Опубликовать', target: 'feed', pick: 'mixed' },
+  story: { title: 'Близз', caption: 'Подпись', cta: 'Опубликовать', target: 'feed', pick: 'mixed' },
+  video: { title: 'Видео', caption: 'Описание', cta: 'Опубликовать', target: 'video', pick: 'video' },
+};
 
-export function CreateScreen({ api, reload, setActive, initial = 'post' }) {
-  const [kind, setKind] = useState(initial);
+const modeOrder = ['post', 'story', 'video'];
+
+function normalizeInitial(initial) {
+  if (initial === 'create' || initial === 'story') return 'story';
+  if (initial === 'video') return 'video';
+  if (initial === 'post') return 'post';
+  if (initial === 'place') return 'place';
+  return 'story';
+}
+
+export function CreateScreen({ api, reload, setActive, setData, initial = 'story' }) {
+  const [kind, setKind] = useState(normalizeInitial(initial));
   const [caption, setCaption] = useState('');
-  const [location, setLocation] = useState('');
+  const [placeAddress, setPlaceAddress] = useState('');
   const [media, setMedia] = useState(null);
-  const [mood, setMood] = useState('joy');
   const [busy, setBusy] = useState(false);
-  const isVideo = kind === 'video';
-  const choose = async () => setMedia(await pickAndUpload(api, isVideo ? 'video' : 'image'));
-  const limitsText = isVideo ? `до ${MEDIA_LIMITS.videoMaxDurationSec} сек · до ${bytesLabel(MEDIA_LIMITS.videoMaxBytes)}` : `сжатие до ${MEDIA_LIMITS.imageMaxDimension}px`;
-  const submit = async () => {
-    if (['post','story','video'].includes(kind) && !media?.url) {
-      Alert.alert('Нужно выбрать медиа', isVideo ? 'Выберите видео из галереи.' : 'Выберите фото из галереи.');
-      return;
+  const [cameraOpening, setCameraOpening] = useState(false);
+  const launchedRef = useRef(false);
+  const { palette, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const isPlace = kind === 'place';
+  const current = modes[kind] || modes.story;
+
+  const mediaLabel = useMemo(() => {
+    if (!media?.url) return '';
+    return isVideoMedia(media) ? 'Видео готово' : 'Медиа готово';
+  }, [media]);
+
+  useEffect(() => {
+    if (isPlace || launchedRef.current) return;
+    launchedRef.current = true;
+    const timer = setTimeout(() => openCamera(), 280);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlace]);
+
+  const setMode = (nextKind) => {
+    setKind(nextKind);
+    if (nextKind === 'video' && media && !isVideoMedia(media)) setMedia(null);
+  };
+
+  const pick = async (source) => {
+    setCameraOpening(source === 'camera');
+    try {
+      const next = await pickAndUpload(api, current.pick || 'mixed', source);
+      if (next?.url) setMedia(next);
+    } catch (e) {
+      Alert.alert('Не удалось выбрать файл', e.message || 'Попробуйте ещё раз.');
+    } finally {
+      setCameraOpening(false);
     }
-    if (!caption.trim() && kind === 'place') { Alert.alert('Название места', 'Введите название места.'); return; }
+  };
+
+  const openCamera = () => pick('camera');
+  const openLibrary = () => pick('library');
+
+  const applyResponse = async (response, target) => {
+    if (response?.posts || response?.videos || response?.stories) setData?.(response);
+    else await reload();
+    setActive(target);
+  };
+
+  const submit = async () => {
+    const text = caption.trim();
+    if (isPlace && !text) return Alert.alert('Название места', 'Введите название места.');
+    if (kind === 'story' && !media?.url) return Alert.alert('Нужно медиа', 'Снимите или выберите фото/видео.');
+    if (kind === 'video' && (!media?.url || !isVideoMedia(media))) return Alert.alert('Нужно видео', 'Снимите или выберите видео.');
+    if (kind === 'post' && !text && !media?.url) return Alert.alert('Пустой пост', 'Добавьте текст или медиа.');
+
     setBusy(true);
     try {
-      const isPickedVideo = media?.mediaType === 'video';
-      const payload = { caption, location, imageUrl: isPickedVideo ? '' : media?.url, videoUrl: isPickedVideo ? media?.url : '', mood, title: caption };
-      if (kind === 'post') await postActions.create(api, payload);
-      if (kind === 'story') await storyActions.create(api, payload);
-      if (kind === 'video') await videoActions.create(api, { ...payload, videoUrl: media?.url });
-      if (kind === 'place') await placeActions.create(api, { name: caption, address: location, imageUrl: media?.url });
-      await reload(); setActive(kind === 'video' ? 'video' : kind === 'place' ? 'nearby' : 'feed');
-    } catch (e) { Alert.alert('Не удалось сохранить', e.message); }
-    finally { setBusy(false); }
+      const pickedVideo = isVideoMedia(media);
+      const payload = {
+        caption: text,
+        linkUrl: '',
+        location: '',
+        imageUrl: pickedVideo ? '' : media?.url || '',
+        videoUrl: pickedVideo ? media?.url || '' : '',
+        title: text,
+      };
+      let response;
+      if (kind === 'post') response = await postActions.create(api, payload);
+      if (kind === 'story') response = await storyActions.create(api, { ...payload, mood: 'joy' });
+      if (kind === 'video') response = await videoActions.create(api, { ...payload, videoUrl: media?.url });
+      if (kind === 'place') response = await placeActions.create(api, { name: text, address: placeAddress.trim(), imageUrl: media?.url || '' });
+      await applyResponse(response, isPlace ? 'nearby' : current.target);
+    } catch (e) {
+      Alert.alert('Не удалось сохранить', e.message);
+    } finally {
+      setBusy(false);
+    }
   };
-  return <View style={styles.wrap}><View style={styles.blob} /><ScrollView contentContainerStyle={styles.content}>
-    <Image source={assets.headerLogo} style={styles.logo} resizeMode="contain" />
-    <Text style={styles.title}>Добавить Миг</Text>
-    <View style={styles.tabs}>{tabs.map(([key, label]) => <Pressable key={key} accessibilityRole="tab" accessibilityState={{ selected: kind === key }} onPress={() => setKind(key)} style={[styles.tab, kind === key && styles.tabOn]}><Text style={[styles.tabText, kind === key && styles.tabTextOn]}>{label}</Text></Pressable>)}</View>
-    <View style={styles.card}>
-      <TextField label={kind === 'place' ? 'Название места' : 'Текст'} value={caption} onChangeText={setCaption} placeholder="Напишите что-нибудь" multiline />
-      <TextField label="Локация / описание" value={location} onChangeText={setLocation} placeholder="Город, место или описание" />
-      {kind === 'story' ? <View style={styles.moods}>{moods.map(([key, label]) => <Pressable key={key} accessibilityRole="button" accessibilityState={{ selected: mood === key }} onPress={() => setMood(key)} style={[styles.mood, mood === key && styles.moodActive]}><Text style={[styles.moodText, mood === key && styles.moodOn]}>{label}</Text></Pressable>)}</View> : null}
-      {media?.url ? <MediaView item={media} style={styles.preview} controls muted={false} /> : null}
-      <Pressable accessibilityRole="button" onPress={choose} style={styles.media}><Text style={styles.mediaText}>{media ? 'Заменить медиа' : isVideo ? 'Выбрать видео из галереи' : 'Выбрать фото из галереи'}</Text></Pressable>
-      <Text style={styles.limit}>{limitsText}</Text>
-      <Pressable accessibilityRole="button" disabled={busy} onPress={submit} style={[styles.submit, busy && { opacity: .6 }]}><Text style={styles.submitText}>{busy ? 'Сохраняем...' : 'Опубликовать'}</Text></Pressable>
+
+  if (isPlace) {
+    return (
+      <View style={[styles.wrap, { backgroundColor: palette.bg }]}> 
+        <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 124 }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Image source={isDark ? assets.headerLogoTransparent : assets.headerLogo} style={styles.logo} resizeMode="contain" />
+          <Field label="Название" value={caption} onChangeText={setCaption} />
+          <Field label="Адрес" value={placeAddress} onChangeText={setPlaceAddress} />
+          <CaptureRow onCamera={openCamera} onLibrary={openLibrary} cameraText="Снять" />
+          {media?.url ? <MediaView item={media} style={styles.preview} controls muted={false} resizeMode={ResizeMode.CONTAIN} /> : null}
+          <PrimaryButton title={busy ? 'Сохраняем...' : 'Добавить'} disabled={busy} onPress={submit} />
+        </ScrollView>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.wrap, { backgroundColor: palette.bg }]}> 
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 128 }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Image source={isDark ? assets.headerLogoTransparent : assets.headerLogo} style={styles.logo} resizeMode="contain" />
+        <View style={styles.modeRow}>
+          {modeOrder.map((key) => <ModeButton key={key} title={modes[key].title} active={kind === key} onPress={() => setMode(key)} />)}
+        </View>
+
+        {!media?.url ? (
+          <View style={styles.cameraPanel}>
+            <Pressable onPress={openCamera} style={[styles.shutter, { borderColor: palette.line }]} accessibilityRole="button" accessibilityLabel="Открыть камеру">
+              <View style={styles.shutterInner} />
+            </Pressable>
+            <Text style={[styles.cameraText, { color: palette.ink }]}>{cameraOpening ? 'Открываем камеру...' : 'Камера'}</Text>
+            <CaptureRow onCamera={openCamera} onLibrary={openLibrary} cameraText="Снять" />
+          </View>
+        ) : (
+          <View>
+            <Text style={[styles.readyLabel, { color: palette.muted }]}>{mediaLabel}</Text>
+            <MediaView item={media} style={styles.preview} controls muted={false} resizeMode={ResizeMode.CONTAIN} />
+            <CaptureRow onCamera={openCamera} onLibrary={openLibrary} cameraText="Переснять" />
+            <Field label={current.caption} value={caption} onChangeText={setCaption} multiline autoFocus />
+            <PrimaryButton title={busy ? 'Публикуем...' : current.cta} disabled={busy} onPress={submit} />
+          </View>
+        )}
+      </ScrollView>
     </View>
-  </ScrollView></View>;
+  );
+}
+
+function ModeButton({ title, active, onPress }) {
+  const { palette } = useTheme();
+  return (
+    <Pressable onPress={onPress} style={styles.modeButton} accessibilityRole="button" accessibilityState={{ selected: active }}>
+      <Text style={[styles.modeText, { color: active ? palette.ink : palette.muted }]}>{title}</Text>
+      <View style={[styles.modeLine, active && styles.modeLineActive]} />
+    </Pressable>
+  );
+}
+
+function Field({ label, style, ...props }) {
+  const { palette } = useTheme();
+  return (
+    <View style={styles.field}>
+      <Text style={[styles.label, { color: palette.ink }]}>{label}</Text>
+      <TextInput
+        placeholderTextColor={palette.muted}
+        style={[styles.input, { color: palette.ink, borderColor: palette.line }, props.multiline && styles.textarea, style]}
+        textAlignVertical={props.multiline ? 'top' : 'center'}
+        {...props}
+      />
+    </View>
+  );
+}
+
+function CaptureRow({ onCamera, onLibrary, cameraText = 'Снять' }) {
+  const { palette } = useTheme();
+  return (
+    <View style={styles.captureRow}>
+      <Pressable onPress={onCamera} style={[styles.captureButton, { borderColor: palette.line }]} accessibilityRole="button" accessibilityLabel={cameraText}>
+        <Icon name="image" size={28} active />
+        <Text style={[styles.captureText, { color: palette.ink }]}>{cameraText}</Text>
+      </Pressable>
+      <Pressable onPress={onLibrary} style={[styles.captureButton, { borderColor: palette.line }]} accessibilityRole="button" accessibilityLabel="Загрузить из галереи">
+        <Text style={[styles.galleryIcon, { color: palette.ink }]}>+</Text>
+        <Text style={[styles.captureText, { color: palette.ink }]}>Галерея</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function PrimaryButton({ title, disabled, onPress }) {
+  return (
+    <Pressable disabled={disabled} onPress={onPress} style={[styles.primaryButton, disabled && styles.disabled]} accessibilityRole="button" accessibilityState={{ disabled }}>
+      <Text style={styles.primaryButtonText}>{title}</Text>
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
-  blob: { position: 'absolute', top: 75, right: -78, width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(123,92,255,.07)' },
-  content: { paddingTop: topInset + 18, paddingHorizontal: 18, paddingBottom: bottomInset + 116 },
-  logo: { width: 112, height: 46, marginBottom: 16 },
-  title: { fontSize: 30, lineHeight: 36, color: colors.ink, fontWeight: '900', marginBottom: 16 },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  tab: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 19, backgroundColor: colors.faint, borderWidth: 1, borderColor: 'transparent' },
-  tabOn: { backgroundColor: colors.softPink, borderColor: 'rgba(242,45,143,.16)' },
-  tabText: { color: colors.muted, fontWeight: '900', fontSize: 15 },
-  tabTextOn: { color: colors.hot },
-  card: { borderRadius: 30, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, padding: 16, ...cardShadow },
-  preview: { height: 210, borderRadius: 22, overflow: 'hidden', backgroundColor: colors.faint, marginBottom: 12 },
-  media: { height: 50, borderRadius: 25, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.surfaceSoft, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  mediaText: { color: colors.ink, fontWeight: '900' },
-  limit: { color: colors.muted, fontWeight: '700', fontSize: 12, marginTop: 7, textAlign: 'center' },
-  moods: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  mood: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 17, backgroundColor: colors.faint },
-  moodActive: { backgroundColor: colors.softPink },
-  moodText: { color: colors.muted, fontWeight: '800' },
-  moodOn: { color: colors.hot },
-  submit: { height: 54, marginTop: 20, borderRadius: 27, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center', ...buttonShadow },
-  submitText: { color: colors.white, fontSize: 16, fontWeight: '900' }
+  content: { paddingHorizontal: 24 },
+  logo: { width: 146, height: 50, marginBottom: 18 },
+  modeRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 22 },
+  modeButton: { minHeight: 44, justifyContent: 'center' },
+  modeText: { color: colors.muted, fontSize: 19, fontWeight: '900' },
+  modeLine: { height: 3, borderRadius: 99, marginTop: 8, backgroundColor: 'transparent' },
+  modeLineActive: { backgroundColor: colors.hot },
+  cameraPanel: { minHeight: 460, alignItems: 'center', justifyContent: 'center' },
+  shutter: { width: 118, height: 118, borderRadius: 59, borderWidth: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
+  shutterInner: { width: 82, height: 82, borderRadius: 41, backgroundColor: colors.hot },
+  cameraText: { fontSize: 20, fontWeight: '900', marginBottom: 22 },
+  captureRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 22 },
+  captureButton: { flex: 1, minHeight: 58, borderRadius: 18, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  captureText: { fontSize: 15, fontWeight: '900' },
+  galleryIcon: { fontSize: 28, fontWeight: '900', marginTop: -2 },
+  readyLabel: { fontSize: 13, fontWeight: '900', textTransform: 'uppercase', marginBottom: 10 },
+  preview: { height: 330, borderRadius: 20, overflow: 'hidden', backgroundColor: 'transparent', marginBottom: 14 },
+  field: { marginBottom: 22 },
+  label: { color: colors.ink, fontSize: 18, fontWeight: '900', marginBottom: 10 },
+  input: { minHeight: 52, color: colors.ink, fontSize: 17, fontWeight: '700', paddingHorizontal: 14, borderWidth: 1, borderRadius: 18 },
+  textarea: { minHeight: 132, paddingTop: 12, lineHeight: 23 },
+  primaryButton: { minHeight: 56, borderRadius: 999, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  disabled: { opacity: 0.55 },
 });

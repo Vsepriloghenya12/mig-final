@@ -16,7 +16,7 @@ function ensure() { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.mkdirSync(UP
 function normalize(db) {
   Object.assign(db, { users: db.users || [], posts: db.posts || [], stories: db.stories || [], videos: db.videos || [], places: db.places || [], collections: db.collections || [], dialogs: db.dialogs || [], messages: db.messages || [], games: db.games || [], reports: db.reports || [], moderationActions: db.moderationActions || [], notifications: db.notifications || [] });
   purgeLegacyDemo(db);
-  db.users.forEach((u) => { u.followers ||= []; u.following ||= []; u.savedPostIds ||= []; u.blockedUserIds ||= []; u.pushTokens ||= []; u.status ||= 'active'; });
+  db.users.forEach((u) => { u.followers ||= []; u.following ||= []; u.savedPostIds ||= []; u.blockedUserIds ||= []; u.pushTokens ||= []; u.status ||= 'active'; u.phone ||= ''; });
   db.posts.forEach((p) => { p.likedBy ||= []; p.comments ||= []; p.status ||= 'active'; delete p.imageKey; delete p.avatarKey; });
   db.videos.forEach((v) => { v.likedBy ||= []; v.comments ||= []; v.status ||= 'active'; delete v.imageKey; });
   db.stories.forEach((s) => { s.status ||= 'active'; delete s.imageKey; delete s.avatarKey; });
@@ -41,7 +41,7 @@ function writeDb(db) { ensure(); db.meta ||= {}; db.meta.updatedAt = nowIso(); f
 function resetDb() { const db = seed(); writeDb(db); return db; }
 function getUser(db, userId = `user_${Date.now()}`) {
   let user = db.users.find((u) => u.id === userId);
-  if (!user) { user = { id: userId, name: 'Пользователь', handle: `@${userId}`, bio: '', avatarUrl: '', followers: [], following: [], savedPostIds: [], blockedUserIds: [], pushTokens: [], status: 'active' }; db.users.push(user); }
+  if (!user) { user = { id: userId, name: 'Пользователь', handle: `@${userId}`, phone: '', bio: '', avatarUrl: '', followers: [], following: [], savedPostIds: [], blockedUserIds: [], pushTokens: [], status: 'active' }; db.users.push(user); }
   return user;
 }
 module.exports = { DATA_DIR, UPLOAD_DIR, readDb, writeDb, resetDb, getUser };

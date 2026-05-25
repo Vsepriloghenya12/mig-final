@@ -3,52 +3,64 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../config';
 
 const KEY = 'mig.identity.v1';
+const LEGACY_KEYS = ['mig.user', 'mig.user.v1', 'mig.auth', 'mig.session'];
 
-async function registerIdentity(identity) {
-  const response = await fetch(`${API_URL}/api/users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(identity.authToken ? { 'x-user-token': identity.authToken } : {})
-    },
-    body: JSON.stringify(identity)
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data?.error || 'Не удалось создать профиль');
-  return { id: data.session?.id || identity.id, name: data.session?.name || identity.name, handle: data.session?.handle, authToken: data.authToken || data.session?.authToken };
+function normalizePhone(value = '') {
+  return String(value).replace(/[^0-9]/g, '');
+}
+
+function phoneHash(phone) {
+  let hash = 5381;
+  for (let i = 0; i < phone.length; i += 1) hash = ((hash << 5) + hash) ^ phone.charCodeAt(i);
+  return Math.abs(hash >>> 0).toString(36);
+}
+
+function buildIdentity({ name, phone }) {
+  const phoneDigits = normalizePhone(phone);
+  const id = phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`;
+  return {
+    id,
+    name: String(name || '').trim() || 'Пользователь',
+    phone: phoneDigits,
+  };
 }
 
 export function useIdentity() {
   const [identity, setIdentity] = useState(null);
   const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const raw = await AsyncStorage.getItem(KEY);
-        if (raw) {
-          const stored = JSON.parse(raw);
-          const upgraded = await registerIdentity(stored);
-          if (!cancelled) {
-            await AsyncStorage.setItem(KEY, JSON.stringify(upgraded));
-            setIdentity(upgraded);
-          }
+    let mounted = true;
+    AsyncStorage.getItem(KEY)
+      .then((v) => {
+        if (!mounted) return;
+        if (v) {
+          try { setIdentity(JSON.parse(v)); }
+          catch { AsyncStorage.removeItem(KEY); }
         }
-      } catch (e) {
-        console.log('Identity restore skipped:', e.message);
-      } finally {
-        if (!cancelled) setReady(true);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
+      })
+      .finally(() => { if (mounted) setReady(true); });
+    return () => { mounted = false; };
   }, []);
-  const save = async (name) => {
-    const draft = { id: `user_${Date.now().toString(36)}`, name: name.trim() || 'Пользователь' };
-    const next = await registerIdentity(draft);
-    await AsyncStorage.setItem(KEY, JSON.stringify(next));
-    setIdentity(next);
+
+  const save = async (payload) => {
+    const next = buildIdentity(typeof payload === 'string' ? { name: payload } : payload || {});
+    const response = await fetch(`${API_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(next),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.error || 'Не удалось войти');
+    const saved = data?.user ? { ...next, ...data.user, phone: next.phone } : next;
+    await AsyncStorage.multiSet([[KEY, JSON.stringify(saved)]]);
+    setIdentity(saved);
   };
-  const clear = async () => { await AsyncStorage.removeItem(KEY); setIdentity(null); };
+
+  const clear = async () => {
+    await AsyncStorage.multiRemove([KEY, ...LEGACY_KEYS]);
+    setIdentity(null);
+  };
+
   return { identity, ready, save, clear };
 }

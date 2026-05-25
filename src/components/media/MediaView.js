@@ -10,7 +10,7 @@ export function MediaView({ item, style, imageStyle, videoStyle, shouldPlay = fa
   if (isVideoMedia(item)) {
     return <Video source={source} style={[style, videoStyle]} resizeMode={resizeMode} shouldPlay={shouldPlay} isLooping isMuted={muted} useNativeControls={controls} />;
   }
-  return <Image source={source} style={[style, imageStyle]} resizeMode="cover" />;
+  return <Image source={source} style={[style, imageStyle]} resizeMode={resizeMode === ResizeMode.CONTAIN ? 'contain' : 'cover'} />;
 }
 
 const styles = StyleSheet.create({

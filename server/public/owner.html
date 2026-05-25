@@ -1,109 +1,321 @@
 <!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Миг владелец</title>
-  <style>
-    body{font-family:system-ui;margin:0;background:#fbfaff;color:#15142d}.wrap{max-width:1100px;margin:auto;padding:28px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.card{background:white;border:1px solid #eee8fa;border-radius:24px;padding:20px;margin:14px 0;box-shadow:0 18px 50px #27195a12}.stat{font-size:28px;font-weight:900;color:#f22d8f}input,button,select{height:42px;border-radius:14px;border:1px solid #e8e5f2;padding:0 12px}button{background:#f22d8f;color:white;font-weight:800;border:0;margin:4px}.muted{color:#7d7890}.report{border-top:1px solid #eee8fa;padding:12px 0}.report-actions{margin-top:8px}pre{white-space:pre-wrap;background:#f6f2ff;border-radius:18px;padding:16px;overflow:auto}
-  </style>
-</head>
+<html lang="ru" data-theme-preset="bgUA8q0Yj">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Близз — страница владельца</title>
+<style>
+:root{
+  --background:222 47% 6%;
+  --foreground:210 40% 98%;
+  --card:222 43% 8%;
+  --card-foreground:210 40% 98%;
+  --muted:217 33% 16%;
+  --muted-foreground:215 20% 66%;
+  --primary:330 86% 58%;
+  --primary-foreground:210 40% 98%;
+  --secondary:217 33% 17%;
+  --secondary-foreground:210 40% 98%;
+  --destructive:0 84% 60%;
+  --border:217 33% 18%;
+  --input:217 33% 18%;
+  --ring:330 86% 58%;
+  --radius:18px;
+}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,hsl(330 86% 24% / .36),transparent 38%),radial-gradient(circle at 80% 0,hsl(250 90% 32% / .28),transparent 35%),hsl(var(--background));color:hsl(var(--foreground));font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1440px;margin:0 auto;padding:24px}.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;align-items:stretch}.card{border:1px solid hsl(var(--border));background:linear-gradient(180deg,hsl(var(--card)/.96),hsl(222 43% 7%/.96));border-radius:calc(var(--radius) + 8px);box-shadow:0 24px 80px hsl(222 80% 2%/.34);padding:18px}.heroCard{padding:24px}.eyebrow{display:inline-flex;border:1px solid hsl(var(--border));border-radius:999px;background:hsl(var(--secondary)/.78);color:hsl(var(--muted-foreground));padding:6px 10px;font-weight:800;font-size:12px}h1{font-size:clamp(30px,4.4vw,58px);line-height:.94;letter-spacing:-.06em;margin:18px 0 12px}h2{font-size:20px;letter-spacing:-.02em;margin:0 0 12px}.muted{color:hsl(var(--muted-foreground))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:18px}input,select,textarea{width:100%;height:42px;border:1px solid hsl(var(--input));background:hsl(var(--background)/.72);color:hsl(var(--foreground));border-radius:14px;padding:0 12px;outline:none}textarea{height:92px;padding:12px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring)/.18)}button,.btn{height:42px;border:0;border-radius:14px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));padding:0 14px;font-weight:900;cursor:pointer;white-space:nowrap}button:hover{filter:brightness(1.05)}button.secondary{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground));border:1px solid hsl(var(--border))}button.ghost{background:transparent;border:1px solid hsl(var(--border));color:hsl(var(--foreground))}button.danger{background:hsl(var(--destructive));color:white}button:disabled{opacity:.5;cursor:not-allowed}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{background:hsl(var(--secondary)/.62);border:1px solid hsl(var(--border));color:hsl(var(--muted-foreground))}.tab.active{background:hsl(var(--primary));color:white;border-color:hsl(var(--primary))}.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.stat{min-height:112px;display:flex;flex-direction:column;justify-content:space-between}.statValue{font-size:30px;font-weight:950;letter-spacing:-.04em}.statLabel{color:hsl(var(--muted-foreground));font-weight:800}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.section{display:none}.section.active{display:block}.list{display:grid;gap:10px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;border:1px solid hsl(var(--border));background:hsl(var(--muted)/.34);border-radius:18px;padding:12px}.itemMain{min-width:0}.itemTitle{font-weight:950;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis}.itemMeta{font-size:12px;color:hsl(var(--muted-foreground));overflow:hidden;text-overflow:ellipsis}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid hsl(var(--border));background:hsl(var(--secondary)/.86);color:hsl(var(--muted-foreground));font-size:12px;font-weight:900;padding:4px 8px;margin-left:6px}.badge.good{color:#8ef5b3;border-color:rgba(142,245,179,.22);background:rgba(30,160,90,.12)}.badge.bad{color:#ff9aa7;border-color:rgba(255,90,116,.24);background:rgba(255,70,110,.12)}.badge.warn{color:#ffd58a;border-color:rgba(255,213,138,.24);background:rgba(255,180,60,.12)}pre{white-space:pre-wrap;overflow:auto;max-height:520px;background:hsl(222 47% 5%);border:1px solid hsl(var(--border));border-radius:18px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:420px;border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:18px;padding:14px 16px;box-shadow:0 24px 80px hsl(222 80% 2%/.45);display:none}.toast.show{display:block}.dangerZone{border-color:hsl(var(--destructive)/.32);background:linear-gradient(180deg,hsl(0 84% 60%/.10),hsl(var(--card)/.96))}.kpiLine{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.mini{border:1px solid hsl(var(--border));border-radius:18px;padding:12px;background:hsl(var(--muted)/.28)}.mini b{display:block;font-size:21px}.mini span{color:hsl(var(--muted-foreground));font-size:12px;font-weight:800}@media(max-width:1100px){.hero,.split{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:720px){.wrap{padding:14px}.toolbar{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:1fr}.actions{justify-content:flex-start}h1{font-size:36px}}
+</style>
 <body>
-  <div class="wrap">
-    <h1>Миг — модерация</h1>
-    <div class="card"><input id="token" placeholder="OWNER_TOKEN"><button id="loadBtn">Загрузить</button><button id="resetBtn">Сбросить базу</button></div>
-    <div id="stats" class="grid"></div>
-    <div class="card"><h2>Жалобы</h2><div id="reports" class="muted">Введите токен</div></div>
-    <div class="card"><h2>База</h2><pre id="out">Введите токен и загрузите данные.</pre></div>
+<div class="wrap">
+  <div class="hero">
+    <section class="card heroCard">
+      <span class="eyebrow">Owner console · shadcn preset bgUA8q0Yj</span>
+      <h1>Страница владельца Близз</h1>
+      <p class="muted">Статистика приложения, пользователи, контент, жалобы и критические рычаги управления в одном месте.</p>
+      <div class="toolbar">
+        <input id="token" placeholder="OWNER_TOKEN" autocomplete="off">
+        <button id="loadBtn">Загрузить</button>
+        <button class="secondary" id="saveTokenBtn">Сохранить токен</button>
+      </div>
+    </section>
+    <section class="card dangerZone">
+      <h2>Критические действия</h2>
+      <p class="muted">Используйте только после проверки. Сброс базы удаляет все данные приложения.</p>
+      <div class="row">
+        <button class="danger" id="resetBtn">Сбросить базу</button>
+        <button class="secondary" id="downloadBtn">Скачать JSON</button>
+      </div>
+      <div class="kpiLine">
+        <div class="mini"><b id="kpiUsers">—</b><span>пользователей</span></div>
+        <div class="mini"><b id="kpiContent">—</b><span>контента</span></div>
+        <div class="mini"><b id="kpiReports">—</b><span>открытых жалоб</span></div>
+      </div>
+    </section>
   </div>
-  <script>
-    let db = {};
-    const tokenEl = document.getElementById('token');
-    const statsEl = document.getElementById('stats');
-    const reportsEl = document.getElementById('reports');
-    const outEl = document.getElementById('out');
-    document.getElementById('loadBtn').addEventListener('click', load);
-    document.getElementById('resetBtn').addEventListener('click', resetDb);
 
-    async function req(p, o = {}) {
-      const r = await fetch('/api/' + p, {
-        ...o,
-        headers: { 'Content-Type': 'application/json', 'x-owner-token': tokenEl.value },
-        body: o.body ? JSON.stringify(o.body) : undefined
-      });
-      const d = await r.json();
-      if (!r.ok) throw Error(d.error || 'Ошибка запроса');
-      return d;
-    }
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-section="overview">Обзор</button>
+    <button class="tab" data-section="users">Пользователи</button>
+    <button class="tab" data-section="content">Контент</button>
+    <button class="tab" data-section="reports">Жалобы</button>
+    <button class="tab" data-section="raw">База</button>
+  </div>
 
-    function make(tag, className, text) {
-      const el = document.createElement(tag);
-      if (className) el.className = className;
-      if (text !== undefined) el.textContent = text;
-      return el;
-    }
+  <section id="overview" class="section active">
+    <div id="stats" class="grid"></div>
+    <div class="split" style="margin-top:12px">
+      <div class="card"><h2>Активность</h2><div id="activity" class="list"></div></div>
+      <div class="card"><h2>Последние действия модерации</h2><div id="moderationActions" class="list muted">Нет данных</div></div>
+    </div>
+  </section>
 
-    function statBox(name, value) {
-      const card = make('div', 'card');
-      card.append(make('div', 'stat', String(value)));
-      card.append(make('b', '', name));
-      return card;
-    }
+  <section id="users" class="section">
+    <div class="card"><div class="row"><input id="userSearch" placeholder="Поиск пользователя: имя, телефон, id" style="flex:1"><select id="userFilter" style="max-width:180px"><option value="all">Все</option><option value="active">Активные</option><option value="blocked">Заблокированные</option></select></div></div>
+    <div id="usersList" class="list"></div>
+  </section>
 
-    async function load() {
-      try {
-        db = await req('owner/data');
-        statsEl.replaceChildren(
-          statBox('Пользователи', db.users.length),
-          statBox('Посты', db.posts.length),
-          statBox('Истории', db.stories.length),
-          statBox('Видео', db.videos.length),
-          statBox('Места', db.places.length),
-          statBox('Жалобы', db.reports.length),
-          statBox('Открытые', db.reports.filter((r) => r.status === 'open').length),
-          statBox('Уведомления', (db.notifications || []).length)
-        );
-        renderReports();
-        outEl.textContent = JSON.stringify(db, null, 2);
-      } catch (e) {
-        alert(e.message);
-      }
-    }
+  <section id="content" class="section">
+    <div class="card"><div class="row"><input id="contentSearch" placeholder="Поиск контента: подпись, автор, id" style="flex:1"><select id="contentFilter" style="max-width:180px"><option value="all">Весь контент</option><option value="active">Активный</option><option value="deleted">Удалённый</option></select></div></div>
+    <div id="contentList" class="list"></div>
+  </section>
 
-    function renderReports() {
-      const list = (db.reports || []).slice().reverse();
-      reportsEl.classList.toggle('muted', !list.length);
-      if (!list.length) {
-        reportsEl.textContent = 'Жалоб нет';
-        return;
-      }
-      const nodes = list.map((r) => {
-        const row = make('div', 'report');
-        const title = make('b', '', r.targetType || 'unknown');
-        row.append(title, document.createTextNode(' · ' + (r.reason || '') + ' · ' + (r.status || '')));
-        row.append(document.createElement('br'));
-        row.append(make('span', 'muted', 'target: ' + (r.targetId || '') + ' · user: ' + (r.targetUserId || '')));
-        const actions = make('div', 'report-actions');
-        actions.append(button('Закрыть', () => resolveReport(r.id)));
-        actions.append(button('Удалить контент', () => deleteContent(r.targetType, r.targetId)));
-        if (r.targetUserId) actions.append(button('Блок автора', () => ownerBlock(r.targetUserId)));
-        row.append(actions);
-        return row;
-      });
-      reportsEl.replaceChildren(...nodes);
-    }
+  <section id="reports" class="section">
+    <div id="reportsList" class="list"></div>
+  </section>
 
-    function button(text, onClick) {
-      const el = make('button', '', text);
-      el.type = 'button';
-      el.addEventListener('click', onClick);
-      return el;
-    }
+  <section id="raw" class="section">
+    <div class="card"><h2>Сырые данные</h2><pre id="out">Введите токен и загрузите данные.</pre></div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+'use strict';
+let db = null;
+let statsData = null;
+const $ = (id) => document.getElementById(id);
+const el = (tag, className, text) => { const n = document.createElement(tag); if (className) n.className = className; if (text !== undefined) n.textContent = text; return n; };
+const fmt = (n) => new Intl.NumberFormat('ru-RU').format(Number(n || 0));
+const date = (x) => x ? new Date(x).toLocaleString('ru-RU') : '—';
+const tokenValue = () => $('token').value.trim();
 
-    async function resolveReport(id) { await req('owner/reports/' + encodeURIComponent(id) + '/resolve', { method: 'POST', body: { resolution: 'reviewed' } }); load(); }
-    async function deleteContent(t, id) { if (confirm('Удалить контент?')) { await req('owner/content/' + encodeURIComponent(t) + '/' + encodeURIComponent(id) + '/delete', { method: 'POST', body: { reason: 'report' } }); load(); } }
-    async function ownerBlock(id) { if (confirm('Заблокировать пользователя?')) { await req('owner/users/' + encodeURIComponent(id) + '/block', { method: 'POST', body: { block: true, reason: 'report' } }); load(); } }
-    async function resetDb() { if (confirm('Сбросить базу?')) { await req('owner/reset', { method: 'POST' }); load(); } }
-  </script>
+$('token').value = localStorage.getItem('blizz.owner.token') || '';
+$('saveTokenBtn').addEventListener('click', () => { localStorage.setItem('blizz.owner.token', tokenValue()); show('Токен сохранён локально в браузере.'); });
+$('loadBtn').addEventListener('click', load);
+$('resetBtn').addEventListener('click', resetDb);
+$('downloadBtn').addEventListener('click', downloadJson);
+$('userSearch').addEventListener('input', renderUsers);
+$('userFilter').addEventListener('change', renderUsers);
+$('contentSearch').addEventListener('input', renderContent);
+$('contentFilter').addEventListener('change', renderContent);
+
+document.querySelectorAll('.tab').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+  document.querySelectorAll('.section').forEach((x) => x.classList.remove('active'));
+  button.classList.add('active');
+  $(button.dataset.section).classList.add('active');
+}));
+
+async function req(path, options = {}) {
+  const response = await fetch('/api/' + path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-owner-token': tokenValue(), ...(options.headers || {}) },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) throw new Error(data?.error || 'HTTP ' + response.status);
+  return data;
+}
+
+async function load() {
+  try {
+    [db, statsData] = await Promise.all([req('owner/data'), req('owner/stats')]);
+    renderAll();
+    show('Данные загружены.');
+  } catch (error) { show(error.message, true); }
+}
+
+function renderAll() {
+  renderStats(); renderActivity(); renderActions(); renderUsers(); renderContent(); renderReports();
+  $('out').textContent = JSON.stringify(db, null, 2);
+  $('kpiUsers').textContent = fmt(statsData.users);
+  $('kpiContent').textContent = fmt(statsData.activeContent + statsData.deletedContent);
+  $('kpiReports').textContent = fmt(statsData.openReports);
+}
+
+function renderStats() {
+  const cards = [
+    ['Пользователи', statsData.users], ['Активные', statsData.activeUsers], ['Заблокированные', statsData.blockedUsers],
+    ['Посты', statsData.posts], ['Близзы', statsData.stories], ['Видео', statsData.videos],
+    ['Места', statsData.places], ['Диалоги', statsData.dialogs], ['Сообщения', statsData.messages],
+    ['Игры', statsData.games], ['Лайки', statsData.likes], ['Комментарии', statsData.comments],
+    ['Жалобы', statsData.reports], ['Открытые жалобы', statsData.openReports], ['Действия модерации', statsData.moderationActions],
+    ['Уведомления', statsData.notifications], ['Контент сегодня', statsData.contentToday], ['Сообщения сегодня', statsData.messagesToday],
+  ];
+  replace($('stats'), cards.map(([label, value]) => statCard(label, value)));
+}
+
+function statCard(label, value) {
+  const node = el('div', 'card stat');
+  node.append(el('div', 'statValue', fmt(value)));
+  node.append(el('div', 'statLabel', label));
+  return node;
+}
+
+function renderActivity() {
+  const rows = [
+    ['Новые пользователи сегодня', statsData.usersToday],
+    ['Новые пользователи за 7 дней', statsData.users7d],
+    ['Контент за 7 дней', statsData.content7d],
+    ['Удалённый контент', statsData.deletedContent],
+    ['Решённые жалобы', statsData.resolvedReports],
+  ];
+  replace($('activity'), rows.map(([label, value]) => simpleItem(label, fmt(value))));
+}
+
+function renderActions() {
+  const list = (db.moderationActions || []).slice().reverse().slice(0, 12);
+  replace($('moderationActions'), list.length ? list.map((x) => simpleItem(x.type || 'action', `${x.targetId || ''} · ${date(x.createdAt)}`)) : [el('div', 'muted', 'Нет действий')]);
+}
+
+function renderUsers() {
+  if (!db) return;
+  const query = $('userSearch').value.trim().toLowerCase();
+  const filter = $('userFilter').value;
+  const users = (db.users || []).slice().sort((a,b) => String(b.lastLoginAt || b.createdAt || '').localeCompare(String(a.lastLoginAt || a.createdAt || ''))).filter((u) => {
+    const hay = [u.id, u.name, u.handle, u.phone, u.bio, u.status].join(' ').toLowerCase();
+    if (query && !hay.includes(query)) return false;
+    if (filter === 'active' && u.status === 'blocked') return false;
+    if (filter === 'blocked' && u.status !== 'blocked') return false;
+    return true;
+  });
+  replace($('usersList'), users.length ? users.map(userRow) : [empty('Пользователи не найдены')]);
+}
+
+function userRow(user) {
+  const node = el('div', 'item');
+  const main = el('div', 'itemMain');
+  const title = el('div', 'itemTitle', user.name || 'Без имени');
+  title.append(badge(user.status === 'blocked' ? 'blocked' : 'active', user.status === 'blocked' ? 'bad' : 'good'));
+  main.append(title);
+  main.append(el('div', 'itemMeta', `${user.handle || '@user'} · ${user.phone || 'телефон не указан'} · ${user.id}`));
+  main.append(el('div', 'itemMeta', `Постов: ${countBy('posts', user.id)} · Близзов: ${countBy('stories', user.id)} · Видео: ${countBy('videos', user.id)} · Вход: ${date(user.lastLoginAt)}`));
+  const actions = el('div', 'actions');
+  actions.append(button(user.status === 'blocked' ? 'Разблокировать' : 'Заблокировать', user.status === 'blocked' ? 'secondary' : 'danger', () => blockUser(user.id, user.status !== 'blocked')));
+  actions.append(button('Удалить аккаунт', 'danger', () => deleteUser(user.id)));
+  node.append(main, actions);
+  return node;
+}
+
+function renderContent() {
+  if (!db) return;
+  const query = $('contentSearch').value.trim().toLowerCase();
+  const filter = $('contentFilter').value;
+  const rows = contentRows().filter((x) => {
+    const hay = [x.type, x.id, x.caption, x.name, x.author?.name, x.author?.id, x.status].join(' ').toLowerCase();
+    if (query && !hay.includes(query)) return false;
+    if (filter === 'active' && x.status === 'deleted') return false;
+    if (filter === 'deleted' && x.status !== 'deleted') return false;
+    return true;
+  });
+  replace($('contentList'), rows.length ? rows.map(contentRow) : [empty('Контент не найден')]);
+}
+
+function contentRows() {
+  const users = new Map((db.users || []).map((u) => [u.id, u]));
+  const map = (list, type) => (list || []).map((x) => ({ ...x, type, author: users.get(x.authorId || x.userId || x.ownerId) }));
+  return [...map(db.posts, 'post'), ...map(db.stories, 'story'), ...map(db.videos, 'video'), ...map(db.places, 'place')].sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+}
+
+function contentRow(item) {
+  const node = el('div', 'item');
+  const main = el('div', 'itemMain');
+  const title = el('div', 'itemTitle', item.caption || item.name || item.type);
+  title.append(badge(item.type, 'warn'));
+  title.append(badge(item.status === 'deleted' ? 'deleted' : 'active', item.status === 'deleted' ? 'bad' : 'good'));
+  main.append(title);
+  main.append(el('div', 'itemMeta', `Автор: ${item.author?.name || item.authorId || item.userId || '—'} · ${item.id}`));
+  main.append(el('div', 'itemMeta', `Создано: ${date(item.createdAt)} · лайки: ${(item.likedBy || []).length} · комментарии: ${(item.comments || []).length}`));
+  const actions = el('div', 'actions');
+  if (item.status === 'deleted') actions.append(button('Восстановить', 'secondary', () => restoreContent(item.type, item.id)));
+  else actions.append(button('Удалить', 'danger', () => deleteContent(item.type, item.id)));
+  node.append(main, actions);
+  return node;
+}
+
+function renderReports() {
+  if (!db) return;
+  const list = (db.reports || []).slice().reverse();
+  replace($('reportsList'), list.length ? list.map(reportRow) : [empty('Жалоб нет')]);
+}
+
+function reportRow(report) {
+  const node = el('div', 'item');
+  const main = el('div', 'itemMain');
+  const title = el('div', 'itemTitle', report.reason || 'Жалоба');
+  title.append(badge(report.status || 'open', report.status === 'resolved' ? 'good' : 'bad'));
+  title.append(badge(report.targetType || 'target', 'warn'));
+  main.append(title);
+  main.append(el('div', 'itemMeta', `target: ${report.targetId || '—'} · author: ${report.targetUserId || '—'} · reporter: ${report.reporterId || '—'}`));
+  main.append(el('div', 'itemMeta', `${date(report.createdAt)} · ${report.details || ''}`));
+  const actions = el('div', 'actions');
+  if (report.status !== 'resolved') actions.append(button('Закрыть', 'secondary', () => resolveReport(report.id)));
+  if (report.targetType && report.targetId) actions.append(button('Удалить контент', 'danger', () => deleteContent(report.targetType, report.targetId)));
+  if (report.targetUserId) actions.append(button('Блок автора', 'danger', () => blockUser(report.targetUserId, true)));
+  node.append(main, actions);
+  return node;
+}
+
+function countBy(collection, userId) { return (db[collection] || []).filter((x) => (x.authorId || x.userId || x.ownerId) === userId).length; }
+function simpleItem(title, meta) { const n = el('div', 'item'); const main = el('div', 'itemMain'); main.append(el('div', 'itemTitle', title)); main.append(el('div', 'itemMeta', meta)); n.append(main); return n; }
+function empty(text) { return el('div', 'card muted', text); }
+function badge(text, tone) { const n = el('span', `badge ${tone || ''}`); n.textContent = text; return n; }
+function button(text, cls, fn) { const b = el('button', cls, text); b.addEventListener('click', fn); return b; }
+function replace(target, children) { target.replaceChildren(...children); }
+
+async function blockUser(id, shouldBlock) {
+  if (!confirm(shouldBlock ? 'Заблокировать пользователя?' : 'Разблокировать пользователя?')) return;
+  try { await req(`owner/users/${encodeURIComponent(id)}/block`, { method: 'POST', body: { block: shouldBlock, reason: 'owner console' } }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+async function deleteUser(id) {
+  if (!confirm('Удалить аккаунт и все данные пользователя?')) return;
+  try { await req(`owner/users/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+async function deleteContent(type, id) {
+  if (!confirm('Удалить контент?')) return;
+  try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+async function restoreContent(type, id) {
+  try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/restore`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+async function resolveReport(id) {
+  try { await req(`owner/reports/${encodeURIComponent(id)}/resolve`, { method: 'POST', body: { resolution: 'reviewed in owner console' } }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+async function resetDb() {
+  if (!confirm('Точно сбросить всю базу?')) return;
+  try { await req('owner/reset', { method: 'POST' }); await load(); }
+  catch (error) { show(error.message, true); }
+}
+function downloadJson() {
+  if (!db) return show('Сначала загрузите данные.', true);
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `blizz-db-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function show(message, danger) {
+  const toast = $('toast');
+  toast.textContent = message;
+  toast.style.borderColor = danger ? 'hsl(var(--destructive) / .55)' : 'hsl(var(--border))';
+  toast.classList.add('show');
+  clearTimeout(show.timer);
+  show.timer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+if (tokenValue()) load();
+</script>
 </body>
 </html>

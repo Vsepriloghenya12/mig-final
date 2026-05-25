@@ -14,7 +14,7 @@ export function usePushNotifications(api, userId) {
       if (!api || !userId) return;
       try {
         if (Platform.OS === 'android') {
-          await Notifications.setNotificationChannelAsync('default', { name: 'Миг', importance: Notifications.AndroidImportance.MAX });
+          await Notifications.setNotificationChannelAsync('default', { name: 'Близз', importance: Notifications.AndroidImportance.MAX });
         }
         const current = await Notifications.getPermissionsAsync();
         const finalStatus = current.status === 'granted' ? current.status : (await Notifications.requestPermissionsAsync()).status;

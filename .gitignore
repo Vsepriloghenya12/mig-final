@@ -5,6 +5,5 @@ dist-android/
 web-build/
 server/node_modules/
 server/data/db.json
-server/data/uploads/
 .env
 *.log

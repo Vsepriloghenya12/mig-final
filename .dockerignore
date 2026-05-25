@@ -4,8 +4,3 @@ server/node_modules
 .git
 *.zip
 npm-debug.log
-dist
-dist-android
-web-build
-server/data
-.env

@@ -1,51 +1,157 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { chatApi } from '../../api/chat';
 import { POLL_MS } from '../../config';
 import { ChatBubble } from '../../components/chat/ChatBubble';
 import { Avatar } from '../../components/ui/Avatar';
-import { Icon } from '../../components/ui/Icon';
-import { colors, topInset } from '../../theme';
+import { Button } from '../../components/ui/button';
+import { ActionSheet, ActionSheetItem } from '../../components/ui/action-sheet';
+import { Icon } from '../../components/ui/MigIcon';
+import { Text } from '../../components/ui/text';
+import { useTheme } from '../../theme-context';
+import { colors, shadow } from '../../theme';
 import { pickAndUpload } from '../../utils/picker';
 import { blockUser, reportContent } from '../../utils/moderation';
 
 export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
   const [messages, setMessages] = useState([]);
+  const { palette } = useTheme();
   const [text, setText] = useState('');
-  const [menu, setMenu] = useState(false);
-  const scroll = useRef(null);
-  const load = async () => setMessages((await chatApi.messages(api, dialogId)).messages || []);
-  useEffect(() => { load(); const t = setInterval(load, POLL_MS); return () => clearInterval(t); }, [dialogId]);
-  const send = async () => { if (!text.trim()) return; await chatApi.sendText(api, dialogId, text.trim()); setText(''); await load(); };
-  const media = async (kind) => { setMenu(false); const file = await pickAndUpload(api, kind); if (file) { await chatApi.sendMedia(api, dialogId, file); await load(); } };
-  const game = async (kind) => { setMenu(false); await chatApi.startGame(api, dialogId, kind); await load(); };
-  const onGame = async (action, id, choice) => { try { if (action === 'accept') await chatApi.acceptGame(api, id); if (action === 'decline') await chatApi.declineGame(api, id); if (action === 'move') await chatApi.moveGame(api, id, choice); await load(); } catch (e) { Alert.alert('Игра', e.message); } };
-  const reportMessage = (msg) => reportContent(api, { targetType: 'message', targetId: msg.id, targetUserId: msg.userId });
-  return <View style={styles.wrap}><View style={styles.head}><Pressable onPress={onBack}><Icon name="back" size={34} /></Pressable><Avatar user={user} size={42} /><Text style={styles.title}>{user?.name || 'Диалог'}</Text><View style={{ flex: 1 }} /><Pressable onPress={() => reportContent(api, { targetType: 'profile', targetId: user?.id, targetUserId: user?.id })}><Text style={styles.headBtn}>!</Text></Pressable><Pressable onPress={() => blockUser(api, user?.id, onBack)}><Text style={styles.headBtn}>Блок</Text></Pressable></View>
-    <ScrollView ref={scroll} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })} contentContainerStyle={styles.list}>{messages.map((m) => <ChatBubble key={m.id} message={m} currentUserId={currentUserId} onGame={onGame} onReport={reportMessage} />)}</ScrollView>
-    <View style={styles.inputRow}><Pressable onPress={() => setMenu(true)} style={styles.plus}><Icon name="plus" color={colors.white} /></Pressable><TextInput value={text} onChangeText={setText} placeholder="Сообщение" placeholderTextColor={colors.muted} style={styles.input} /><Pressable onPress={send} style={styles.send}><Icon name="send" color={colors.white} size={18} /></Pressable></View>
-    <AttachMenu visible={menu} onClose={() => setMenu(false)} onPhoto={() => media('image')} onVideo={() => media('video')} onGame={game} />
-  </View>;
-}
+  const [attachMenu, setAttachMenu] = useState(false);
+  const [profileMenu, setProfileMenu] = useState(false);
+  const listRef = useRef(null);
+  const appState = useRef(AppState.currentState);
+  const insets = useSafeAreaInsets();
 
-function AttachMenu({ visible, onClose, onPhoto, onVideo, onGame }) {
-  return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}><Pressable style={styles.backdrop} onPress={onClose} /><View style={styles.menu}><MenuItem label="Фото" onPress={onPhoto} /><MenuItem label="Видео" onPress={onVideo} /><Text style={styles.gameTitle}>Начать игру</Text><MenuItem label="Напёрстки" onPress={() => onGame('cups')} /><MenuItem label="Три карты" onPress={() => onGame('cards')} /><MenuItem label="Футбол" onPress={() => onGame('football')} /></View></Modal>;
+  const load = useCallback(async () => {
+    if (!dialogId || appState.current !== 'active') return;
+    setMessages((await chatApi.messages(api, dialogId)).messages || []);
+  }, [api, dialogId]);
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, POLL_MS);
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const wasInactive = appState.current !== 'active';
+      appState.current = nextState;
+      if (wasInactive && nextState === 'active') load();
+    });
+    return () => { clearInterval(timer); subscription.remove(); };
+  }, [load]);
+
+  const scrollToEnd = () => requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+  const send = async () => {
+    if (!text.trim()) return;
+    await chatApi.sendText(api, dialogId, text.trim());
+    setText('');
+    await load();
+    scrollToEnd();
+  };
+  const media = async (kind) => {
+    setAttachMenu(false);
+    const file = await pickAndUpload(api, kind);
+    if (file) {
+      await chatApi.sendMedia(api, dialogId, file);
+      await load();
+      scrollToEnd();
+    }
+  };
+  const game = async (kind) => {
+    setAttachMenu(false);
+    await chatApi.startGame(api, dialogId, kind);
+    await load();
+    scrollToEnd();
+  };
+  const onGame = useCallback(async (action, id, choice) => {
+    try {
+      if (action === 'accept') await chatApi.acceptGame(api, id);
+      if (action === 'decline') await chatApi.declineGame(api, id);
+      if (action === 'move') await chatApi.moveGame(api, id, choice);
+      await load();
+    } catch (e) { Alert.alert('Игра', e.message); }
+  }, [api, load]);
+  const reportMessage = useCallback((msg) => reportContent(api, { targetType: 'message', targetId: msg.id, targetUserId: msg.userId }), [api]);
+  const reportProfile = () => { setProfileMenu(false); reportContent(api, { targetType: 'profile', targetId: user?.id, targetUserId: user?.id }); };
+  const blockProfile = () => { setProfileMenu(false); blockUser(api, user?.id, onBack); };
+  const renderMessage = useCallback(({ item }) => <ChatBubble message={item} currentUserId={currentUserId} onGame={onGame} onReport={reportMessage} />, [currentUserId, onGame, reportMessage]);
+
+  return (
+    <KeyboardAvoidingView style={[styles.wrap, { backgroundColor: palette.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}>
+      <View style={[styles.head, { paddingTop: insets.top + 8, minHeight: insets.top + 76, backgroundColor: palette.bg, borderColor: palette.line }]}> 
+        <Pressable onPress={onBack} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Назад">
+          <Icon name="back" size={25} color={palette.ink} />
+        </Pressable>
+        <Avatar user={user} size={44} />
+        <View style={styles.headTitleBox}>
+          <Text numberOfLines={1} style={styles.headTitle}>{user?.name || 'Диалог'}</Text>
+          <Text numberOfLines={1} style={styles.headSubtitle}>{user?.handle || 'в Близз'}</Text>
+        </View>
+        <Pressable onPress={() => setProfileMenu(true)} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Действия с диалогом">
+          <Icon name="more" size={20} color={palette.ink} />
+        </Pressable>
+      </View>
+
+      <FlatList
+        ref={listRef}
+        data={messages}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderMessage}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 108 }]}
+        onContentSizeChange={scrollToEnd}
+        onLayout={scrollToEnd}
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={16}
+        maxToRenderPerBatch={12}
+        windowSize={9}
+        removeClippedSubviews
+        showsVerticalScrollIndicator={false}
+      />
+
+      <View style={[styles.inputDock, { bottom: insets.bottom + 10, backgroundColor: palette.surface, borderColor: palette.line }]}> 
+        <Pressable onPress={() => setAttachMenu(true)} style={styles.attachBtn} accessibilityRole="button" accessibilityLabel="Прикрепить">
+          <Icon name="plus" color={colors.white} size={23} />
+        </Pressable>
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          placeholder="Сообщение"
+          placeholderTextColor={palette.muted}
+          style={[styles.input, { color: palette.ink }]}
+          accessibilityLabel="Сообщение"
+          returnKeyType="send"
+          onSubmitEditing={send}
+        />
+        <Button onPress={send} disabled={!text.trim()} size="icon" variant="secondary" className="h-11 w-11 rounded-full" accessibilityLabel="Отправить">
+          <Icon name="send" color={colors.hot} size={18} />
+        </Button>
+      </View>
+
+      <ActionSheet visible={attachMenu} title="Вложение" description="Добавьте медиа или начните игру" onClose={() => setAttachMenu(false)}>
+        <ActionSheetItem icon="image" label="Фото" description="Отправить изображение" onPress={() => media('image')} />
+        <ActionSheetItem icon="video" label="Видео" description="Отправить короткое видео" onPress={() => media('video')} />
+        <ActionSheetItem icon="game" label="Напёрстки" description="Начать игру в чате" onPress={() => game('cups')} />
+        <ActionSheetItem icon="game" label="Три карты" description="Начать игру в чате" onPress={() => game('cards')} />
+        <ActionSheetItem icon="game" label="Футбол" description="Начать игру в чате" onPress={() => game('football')} />
+      </ActionSheet>
+
+      <ActionSheet visible={profileMenu} title={user?.name || 'Профиль'} description="Действия с пользователем" onClose={() => setProfileMenu(false)}>
+        <ActionSheetItem icon="more" label="Пожаловаться" description="Отправить профиль на проверку" onPress={reportProfile} />
+        <ActionSheetItem icon="close" label="Заблокировать" description="Скрыть пользователя и выйти из чата" tone="destructive" onPress={blockProfile} />
+      </ActionSheet>
+    </KeyboardAvoidingView>
+  );
 }
-function MenuItem({ label, onPress }) { return <Pressable onPress={onPress} style={styles.menuItem}><Text style={styles.menuText}>{label}</Text></Pressable>; }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
-  head: { paddingTop: topInset + 8, paddingHorizontal: 14, height: topInset + 64, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: colors.line },
-  title: { color: colors.ink, fontSize: 20, fontWeight: '900' },
-  headBtn: { color: colors.hot, fontSize: 12, fontWeight: '900' },
-  list: { padding: 14, paddingBottom: 98 },
-  inputRow: { position: 'absolute', left: 12, right: 12, bottom: 14, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: colors.white, borderRadius: 28, borderWidth: 1, borderColor: colors.line, padding: 6 },
-  plus: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.hot, alignItems: 'center', justifyContent: 'center' },
-  input: { flex: 1, minHeight: 42, color: colors.ink, fontSize: 15 },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,.2)' },
-  menu: { position: 'absolute', left: 16, right: 16, bottom: 82, backgroundColor: colors.white, borderRadius: 26, padding: 12 },
-  menuItem: { padding: 14, borderBottomWidth: 1, borderColor: colors.line },
-  menuText: { color: colors.ink, fontWeight: '900', fontSize: 16 },
-  gameTitle: { color: colors.hot, fontWeight: '900', paddingHorizontal: 14, paddingTop: 10 }
+  head: { paddingHorizontal: 14, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 11, backgroundColor: 'rgba(255,255,255,.96)', borderBottomWidth: 1, borderColor: colors.line, ...shadow },
+  headBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.faint, alignItems: 'center', justifyContent: 'center' },
+  headTitleBox: { flex: 1, minWidth: 0 },
+  headTitle: { color: colors.ink, fontSize: 18, fontWeight: '900' },
+  headSubtitle: { color: colors.muted, fontSize: 12, fontWeight: '800', marginTop: 2 },
+  list: { paddingHorizontal: 12, paddingTop: 14 },
+  inputDock: { position: 'absolute', left: 12, right: 12, minHeight: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,.98)', borderWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 7, ...shadow },
+  attachBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.hot },
+  input: { flex: 1, minHeight: 44, color: colors.ink, fontSize: 15, fontWeight: '700', paddingHorizontal: 4 },
 });
