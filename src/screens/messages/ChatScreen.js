@@ -10,13 +10,13 @@ import { ActionSheet, ActionSheetItem } from '../../components/ui/action-sheet';
 import { Icon } from '../../components/ui/MigIcon';
 import { Text } from '../../components/ui/text';
 import { useTheme } from '../../theme-context';
-import { colors, shadow } from '../../theme';
+import { colors } from '../../theme';
 import { pickAndUpload } from '../../utils/picker';
 import { blockUser, reportContent } from '../../utils/moderation';
 
-export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
+export function ChatScreen({ api, dialogId, user, currentUserId, onBack, onOpenProfile }) {
   const [messages, setMessages] = useState([]);
-  const { palette } = useTheme();
+  const { palette, isDark } = useTheme();
   const [text, setText] = useState('');
   const [attachMenu, setAttachMenu] = useState(false);
   const [profileMenu, setProfileMenu] = useState(false);
@@ -75,18 +75,21 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
   const reportProfile = () => { setProfileMenu(false); reportContent(api, { targetType: 'profile', targetId: user?.id, targetUserId: user?.id }); };
   const blockProfile = () => { setProfileMenu(false); blockUser(api, user?.id, onBack); };
   const renderMessage = useCallback(({ item }) => <ChatBubble message={item} currentUserId={currentUserId} onGame={onGame} onReport={reportMessage} />, [currentUserId, onGame, reportMessage]);
+  const openProfile = () => { if (!user?.isGroup && user?.id) onOpenProfile?.(user); };
 
   return (
-    <KeyboardAvoidingView style={[styles.wrap, { backgroundColor: palette.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}>
+    <KeyboardAvoidingView style={[styles.wrap, { backgroundColor: palette.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <View style={[styles.head, { paddingTop: insets.top + 8, minHeight: insets.top + 76, backgroundColor: palette.bg, borderColor: palette.line }]}> 
         <Pressable onPress={onBack} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Назад">
           <Icon name="back" size={25} color={palette.ink} />
         </Pressable>
-        {user?.isGroup ? <GroupAvatar users={user.users || []} /> : <Avatar user={user} size={44} />}
-        <View style={styles.headTitleBox}>
-          <Text numberOfLines={1} style={styles.headTitle}>{user?.name || 'Диалог'}</Text>
-          <Text numberOfLines={1} style={styles.headSubtitle}>{user?.isGroup ? user.handle : (user?.handle || 'в Близз')}</Text>
-        </View>
+        <Pressable onPress={openProfile} disabled={!!user?.isGroup} style={styles.headUser} accessibilityRole="button" accessibilityLabel="Открыть профиль собеседника">
+          {user?.isGroup ? <GroupAvatar users={user.users || []} /> : <Avatar user={user} size={44} />}
+          <View style={styles.headTitleBox}>
+            <Text numberOfLines={1} style={[styles.headTitle, { color: palette.ink }]}>{user?.name || 'Диалог'}</Text>
+            <Text numberOfLines={1} style={[styles.headSubtitle, { color: palette.muted }]}>{user?.isGroup ? user.handle : (user?.handle || 'в Близз')}</Text>
+          </View>
+        </Pressable>
         <Pressable onPress={() => setProfileMenu(true)} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Действия с диалогом">
           <Icon name="more" size={20} color={palette.ink} />
         </Pressable>
@@ -97,7 +100,7 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
         data={messages}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderMessage}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 108 }]}
+        contentContainerStyle={[styles.list, { paddingBottom: 18 }]}
         onContentSizeChange={scrollToEnd}
         onLayout={scrollToEnd}
         keyboardShouldPersistTaps="handled"
@@ -108,7 +111,7 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
         showsVerticalScrollIndicator={false}
       />
 
-      <View style={[styles.inputDock, { bottom: insets.bottom + 10, backgroundColor: palette.surface, borderColor: palette.line }]}> 
+      <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 8), backgroundColor: palette.bg, borderColor: palette.line }]}> 
         <Pressable onPress={() => setAttachMenu(true)} style={styles.attachBtn} accessibilityRole="button" accessibilityLabel="Прикрепить">
           <Icon name="plus" color={colors.white} size={23} />
         </Pressable>
@@ -117,7 +120,7 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
           onChangeText={setText}
           placeholder="Сообщение"
           placeholderTextColor={palette.muted}
-          style={[styles.input, { color: palette.ink }]}
+          style={[styles.input, { color: palette.ink, backgroundColor: isDark ? '#14141C' : '#F4F2FA', borderColor: palette.line }]}
           accessibilityLabel="Сообщение"
           returnKeyType="send"
           onSubmitEditing={send}
@@ -128,16 +131,16 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
       </View>
 
       <ActionSheet visible={attachMenu} title="Вложение" description="Добавьте медиа или начните игру" onClose={() => setAttachMenu(false)}>
-        <ActionSheetItem icon="image" label="Фото" description="Отправить изображение" onPress={() => media('image')} />
-        <ActionSheetItem icon="video" label="Видео" description="Отправить короткое видео" onPress={() => media('video')} />
-        <ActionSheetItem icon="game" label="Напёрстки" description="Начать игру в чате" onPress={() => game('cups')} />
-        <ActionSheetItem icon="game" label="Три карты" description="Начать игру в чате" onPress={() => game('cards')} />
-        <ActionSheetItem icon="game" label="Футбол" description="Начать игру в чате" onPress={() => game('football')} />
+        <ActionSheetItem label="Фото" description="Отправить изображение" onPress={() => media('image')} />
+        <ActionSheetItem label="Видео" description="Отправить короткое видео" onPress={() => media('video')} />
+        <ActionSheetItem label="Напёрстки" description="Начать игру в чате" onPress={() => game('cups')} />
+        <ActionSheetItem label="Три карты" description="Начать игру в чате" onPress={() => game('cards')} />
+        <ActionSheetItem label="Футбол" description="Начать игру в чате" onPress={() => game('football')} />
       </ActionSheet>
 
       <ActionSheet visible={profileMenu} title={user?.name || 'Профиль'} description="Действия с пользователем" onClose={() => setProfileMenu(false)}>
-        <ActionSheetItem icon="more" label="Пожаловаться" description="Отправить профиль на проверку" onPress={reportProfile} />
-        <ActionSheetItem icon="close" label="Заблокировать" description="Скрыть пользователя и выйти из чата" tone="destructive" onPress={blockProfile} />
+        <ActionSheetItem label="Пожаловаться" description="Отправить профиль на проверку" onPress={reportProfile} />
+        <ActionSheetItem label="Заблокировать" description="Скрыть пользователя и выйти из чата" tone="destructive" onPress={blockProfile} />
       </ActionSheet>
     </KeyboardAvoidingView>
   );
@@ -148,9 +151,7 @@ function GroupAvatar({ users = [] }) {
   return (
     <View style={styles.groupAvatarWrap}>
       {list.map((u, i) => (
-        <View key={u.id || i} style={[styles.groupAvatarItem, { left: i * 12, zIndex: 4 - i }]}>
-          <Avatar user={u} size={34} />
-        </View>
+        <View key={u.id || i} style={[styles.groupAvatarItem, { left: i * 12, zIndex: 4 - i }]}><Avatar user={u} size={34} /></View>
       ))}
     </View>
   );
@@ -158,18 +159,19 @@ function GroupAvatar({ users = [] }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
-  head: { paddingHorizontal: 14, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 11, backgroundColor: 'rgba(255,255,255,.96)', borderBottomWidth: 1, borderColor: colors.line, ...shadow },
+  head: { paddingHorizontal: 14, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 11, borderBottomWidth: 1, borderColor: colors.line },
   headBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.faint, alignItems: 'center', justifyContent: 'center' },
+  headUser: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 11, minWidth: 0 },
   groupAvatarWrap: { width: 62, height: 42, position: 'relative' },
   groupAvatarItem: { position: 'absolute', top: 4, borderRadius: 18, borderWidth: 2, borderColor: colors.white, overflow: 'hidden' },
   headTitleBox: { flex: 1, minWidth: 0 },
   headTitle: { color: colors.ink, fontSize: 18, fontWeight: '900' },
   headSubtitle: { color: colors.muted, fontSize: 12, fontWeight: '800', marginTop: 2 },
   list: { paddingHorizontal: 12, paddingTop: 14 },
-  inputDock: { position: 'absolute', left: 12, right: 12, minHeight: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,.98)', borderWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 7, ...shadow },
-  attachBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.hot },
-  input: { flex: 1, minHeight: 44, color: colors.ink, fontSize: 15, fontWeight: '700', paddingHorizontal: 4 },
-  sendBtn: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
+  inputBar: { borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingTop: 8 },
+  attachBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.hot },
+  input: { flex: 1, minHeight: 44, borderRadius: 22, borderWidth: 1, color: colors.ink, fontSize: 15, fontWeight: '700', paddingHorizontal: 16 },
+  sendBtn: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.42 },
-  sendIcon: { width: 58, height: 58 },
+  sendIcon: { width: 54, height: 54 },
 });

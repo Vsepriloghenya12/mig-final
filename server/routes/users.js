@@ -33,4 +33,21 @@ router.post('/users', (req, res) => {
   writeDb(db);
   res.json({ user: publicUser(user) });
 });
+
+
+router.get('/users/:id/connections', (req, res) => {
+  const db = readDb();
+  const viewer = getUser(db, req.query.userId);
+  const target = db.users.find((u) => u.id === req.params.id);
+  if (!target) return res.status(404).json({ error: 'Пользователь не найден' });
+  const type = req.query.type === 'following' ? 'following' : 'followers';
+  const ids = Array.isArray(target[type]) ? target[type] : [];
+  const hidden = new Set([...(viewer.blockedUserIds || [])]);
+  const users = ids
+    .map((id) => db.users.find((u) => u.id === id))
+    .filter((u) => u && u.status !== 'blocked' && !hidden.has(u.id))
+    .map((u) => publicUser(u, viewer));
+  res.json({ type, users });
+});
+
 module.exports = router;

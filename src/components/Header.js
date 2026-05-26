@@ -10,7 +10,7 @@ export const HEADER_EXPANDED_HEIGHT = 82;
 export const HEADER_COLLAPSED_HEIGHT = 0;
 const COLLAPSE_DISTANCE = 92;
 
-export function Header({ onMessages, onSearch, scrollY }) {
+export function Header({ onMessages, onSearch, scrollY, hasUnreadMessages = false }) {
   const insets = useSafeAreaInsets();
   const { palette, isDark, toggleTheme } = useTheme();
   const value = scrollY || new Animated.Value(0);
@@ -72,7 +72,7 @@ export function Header({ onMessages, onSearch, scrollY }) {
             accessibilityRole="button"
             accessibilityLabel="Открыть сообщения"
           >
-            <MailIcon />
+            <MailIcon active={hasUnreadMessages} />
           </Pressable>
         </View>
       </Animated.View>

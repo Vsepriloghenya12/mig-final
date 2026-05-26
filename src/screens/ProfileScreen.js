@@ -14,7 +14,7 @@ import { colors } from '../theme';
 import { mediaSource } from '../utils/media';
 import { pickAvatarAndUpload } from '../utils/picker';
 
-export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
+export function ProfileScreen({ data, api, reload, setActive, onLogout, hasUnreadMessages, onOpenProfile }) {
   const user = data?.currentUser || {};
   const { palette, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -22,6 +22,7 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
   const [menu, setMenu] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState('posts');
+  const [connections, setConnections] = useState({ visible: false, title: '', users: [] });
   const [name, setName] = useState(user.name || '');
   const [handle, setHandle] = useState(user.handle || '');
   const [bio, setBio] = useState(user.bio || '');
@@ -32,6 +33,15 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
   const tiles = tab === 'saved' ? saved : mine;
   const cleanHandle = String(handle || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 24);
   const normalizedHandle = cleanHandle ? `@${cleanHandle}` : viewUser.handle || '';
+
+  const openConnections = async (type) => {
+    try {
+      const result = await api.get(`/api/users/${viewUser.id}/connections?type=${type}`);
+      setConnections({ visible: true, title: type === 'followers' ? 'Подписчики' : 'Подписки', users: result.users || [] });
+    } catch (e) {
+      Alert.alert('Ошибка', e.message);
+    }
+  };
 
   const save = async (extra = {}) => {
     try {
@@ -100,7 +110,7 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
               <Icon name="more" size={22} color={palette.ink} />
             </Pressable>
             <Pressable onPress={() => setActive('messages')} style={[styles.topMail, { backgroundColor: isDark ? '#000000' : colors.white, borderColor: isDark ? palette.line : colors.white }]} accessibilityRole="button" accessibilityLabel="Открыть сообщения">
-              <MailIcon />
+              <MailIcon active={hasUnreadMessages} />
             </Pressable>
           </View>
         </View>
@@ -125,9 +135,8 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
             </View>
 
             <View style={[styles.statsRow, { backgroundColor: palette.surfaceSoft }]}>
-              <Stat value={viewUser.postsCount || 0} label="Близзы" />
-              <Stat value={viewUser.followers || 0} label="Подписчики" />
-              <Stat value={viewUser.following || 0} label="Подписки" />
+              <Stat value={viewUser.followers || 0} label="Подписчики" onPress={() => openConnections('followers')} />
+              <Stat value={viewUser.following || 0} label="Подписки" onPress={() => openConnections('following')} />
             </View>
 
             {editing ? (
@@ -168,6 +177,14 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
           )}
         </View>
       </ScrollView>
+
+      <ConnectionsModal
+        visible={connections.visible}
+        title={connections.title}
+        users={connections.users}
+        onClose={() => setConnections({ visible: false, title: '', users: [] })}
+        onOpenProfile={onOpenProfile}
+      />
 
       <ProfileMenu
         visible={menu}
@@ -267,12 +284,42 @@ function ProfileMenu({ visible, onClose, isDark, deleting, onPrivacy, onTerms, o
   );
 }
 
-function Stat({ value, label }) {
+function ConnectionsModal({ visible, title, users = [], onClose, onOpenProfile }) {
+  const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.statItem}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.connectionsRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={[styles.connectionsSheet, { backgroundColor: palette.bg, borderColor: palette.line, paddingBottom: insets.bottom + 14 }]}> 
+          <View style={[styles.connectionsHandle, { backgroundColor: palette.line }]} />
+          <View style={styles.connectionsHead}>
+            <RNText style={[styles.connectionsTitle, { color: palette.ink }]}>{title}</RNText>
+            <Pressable onPress={onClose} style={[styles.connectionsClose, { backgroundColor: palette.surface }]}><Icon name="close" size={22} color={palette.ink} /></Pressable>
+          </View>
+          <ScrollView>
+            {users.length ? users.map((u) => (
+              <Pressable key={u.id} onPress={() => { onClose(); onOpenProfile?.(u); }} style={[styles.connectionRow, { borderBottomColor: palette.line }]}>
+                <Avatar user={u} size={52} />
+                <View style={styles.connectionText}>
+                  <RNText style={[styles.connectionName, { color: palette.ink }]}>{u.name || u.handle}</RNText>
+                  <RNText style={[styles.connectionHandle, { color: palette.muted }]}>{u.handle}</RNText>
+                </View>
+              </Pressable>
+            )) : <RNText style={[styles.emptyConnections, { color: palette.muted }]}>Список пуст</RNText>}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function Stat({ value, label, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.statItem} accessibilityRole="button" accessibilityLabel={label}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -440,4 +487,15 @@ const styles = StyleSheet.create({
   deleteRowText: { color: colors.danger, fontSize: 16, fontWeight: '900', textAlign: 'center' },
   menuCancel: { height: 52, marginTop: 12, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   menuCancelText: { fontSize: 16, fontWeight: '900' },
+  connectionsRoot: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.28)' },
+  connectionsSheet: { maxHeight: '75%', borderTopLeftRadius: 30, borderTopRightRadius: 30, borderWidth: 1, padding: 16 },
+  connectionsHandle: { width: 42, height: 5, borderRadius: 99, alignSelf: 'center', marginBottom: 14 },
+  connectionsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  connectionsTitle: { fontSize: 24, fontWeight: '900' },
+  connectionsClose: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  connectionRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  connectionText: { flex: 1 },
+  connectionName: { fontSize: 16, fontWeight: '900' },
+  connectionHandle: { marginTop: 3, fontSize: 13, fontWeight: '800' },
+  emptyConnections: { paddingVertical: 24, textAlign: 'center', fontWeight: '800' },
 });

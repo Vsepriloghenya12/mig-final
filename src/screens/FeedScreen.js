@@ -27,7 +27,7 @@ function getFollowingIds(user = {}) {
   return new Set(raw.map((item) => String(item?.id || item)).filter(Boolean));
 }
 
-export function FeedScreen({ data, setData, api, loading, reload, setActive, setNavHidden, onOpenProfile, onSearch }) {
+export function FeedScreen({ data, setData, api, loading, reload, setActive, setNavHidden, onOpenProfile, onSearch, hasUnreadMessages }) {
   const [commentPost, setCommentPost] = useState(null);
   const [story, setStory] = useState(null);
   const [feedMode, setFeedMode] = useState('users');
@@ -100,7 +100,7 @@ export function FeedScreen({ data, setData, api, loading, reload, setActive, set
   ), [api, onOpenProfile, reload, setData]);
 
   return <View style={[styles.wrap, { backgroundColor: palette.bg }]}>
-    <Header onMessages={() => setActive('messages')} onSearch={onSearch} scrollY={scrollY} />
+    <Header onMessages={() => setActive('messages')} onSearch={onSearch} scrollY={scrollY} hasUnreadMessages={hasUnreadMessages} />
     {storiesOverlay}
     <Animated.FlatList
       data={visiblePosts}
@@ -123,7 +123,7 @@ export function FeedScreen({ data, setData, api, loading, reload, setActive, set
       )}
     />
     <CommentsSheet visible={!!commentPost} post={commentPost} onClose={() => setCommentPost(null)} onSend={(text) => act(() => postActions.comment(api, commentPost.id, text))} />
-    <StoryViewer visible={!!story} story={story} onClose={() => setStory(null)} api={api} reload={reload} />
+    <StoryViewer visible={!!story} story={story} onClose={() => setStory(null)} api={api} reload={reload} onOpenProfile={onOpenProfile} />
   </View>;
 }
 

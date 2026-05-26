@@ -62,7 +62,7 @@ export function Icon({ name, size = 24, active, color }) {
 export function MailIcon({ active }) {
   const { isDark, palette } = useTheme();
   return (
-    <View style={[styles.mailButton, { backgroundColor: isDark ? '#000000' : colors.white, borderColor: isDark ? palette.line : colors.white }]}> 
+    <View style={[styles.mailButton, active && styles.mailButtonActive, { backgroundColor: isDark ? '#000000' : colors.white, borderColor: active ? colors.hot : (isDark ? palette.line : colors.white) }]}> 
       <Image source={active ? assets.mailActive : assets.mailInactive} style={styles.mailImage} resizeMode="contain" />
     </View>
   );
@@ -80,8 +80,15 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     ...shadow,
   },
+  mailButtonActive: {
+    shadowColor: colors.hot,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
   mailImage: {
-    width: 26,
-    height: 26,
+    width: 31,
+    height: 31,
   },
 });

@@ -8,7 +8,9 @@
     "start:lan": "npx expo start --lan --clear",
     "start:tunnel": "npx expo start --tunnel --clear",
     "export:android": "npx expo export --platform android --output-dir dist-android --clear",
-    "build:apk": "npx eas build -p android --profile apk --clear-cache"
+    "build:apk": "npx eas build -p android --profile apk --clear-cache",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
