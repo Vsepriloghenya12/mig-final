@@ -49,10 +49,7 @@
     "scheme": "blizz",
     "extra": {
       "buildTarget": "v23-push-notifications",
-      "apiUrl": "https://mig-final-production.up.railway.app",
-      "eas": {
-        "projectId": "64945011-f4fa-4506-8564-1f6394f777b6"
-      }
+      "apiUrl": "https://mig-final-production.up.railway.app"
     },
     "plugins": [
       [

@@ -21,20 +21,39 @@ export function createApi(baseUrl = API_URL, userId) {
     upload: async (asset) => {
       const form = new FormData();
       const isVideo = asset.type === 'video';
-      const name = asset.fileName || `blizz-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
-      const type = asset.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg');
+      const name = asset.fileName || fileNameFromUri(asset.uri, isVideo) || `blizz-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
+      const type = asset.mimeType || mimeTypeFromName(name, isVideo);
       form.append('file', { uri: asset.uri, name, type });
       form.append('userId', userId || '');
       form.append('mediaType', isVideo ? 'video' : 'photo');
       form.append('durationSec', String(asset.durationSec || Math.round((asset.duration || 0) / 1000) || 0));
       form.append('width', String(asset.width || 0));
       form.append('height', String(asset.height || 0));
-      const response = await fetch(`${root}/api/media`, { method: 'POST', body: form });
-      return parse(response);
+      const response = await fetch(`${root}/api/media`, { method: 'POST', headers: { Accept: 'application/json' }, body: form });
+      const result = await parse(response);
+      if (!result?.url) throw new Error('Сервер не вернул ссылку на медиа.');
+      return result;
     }
   };
 }
 
 export async function loadBootstrap(api) {
   return api.get('/api/bootstrap');
+}
+
+
+function fileNameFromUri(uri = '', isVideo = false) {
+  const clean = String(uri || '').split('?')[0];
+  const last = clean.split('/').pop();
+  if (!last || !last.includes('.')) return '';
+  return last;
+}
+
+function mimeTypeFromName(name = '', isVideo = false) {
+  const lower = String(name).toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.mov') || lower.endsWith('.qt')) return 'video/quicktime';
+  if (lower.endsWith('.webm')) return 'video/webm';
+  return isVideo ? 'video/mp4' : 'image/jpeg';
 }

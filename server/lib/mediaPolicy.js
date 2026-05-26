@@ -23,8 +23,23 @@ function validateUploaded(file, body = {}) {
   return '';
 }
 function publicUploadUrl(req, filename) {
-  const base = process.env.PUBLIC_UPLOAD_BASE_URL || process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+  const explicitBase = process.env.PUBLIC_UPLOAD_BASE_URL || process.env.PUBLIC_URL;
+  const base = explicitBase || requestBaseUrl(req);
   return `${String(base).replace(/\/$/, '')}/uploads/${filename}`;
+}
+
+function requestBaseUrl(req) {
+  const forwardedHost = String(req.get('x-forwarded-host') || '').split(',')[0].trim();
+  const host = forwardedHost || String(req.get('host') || '').trim();
+  const forwardedProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim();
+  let proto = forwardedProto || req.protocol || 'https';
+  if (proto === 'http' && host && !isLocalHost(host)) proto = 'https';
+  return `${proto}://${host}`;
+}
+
+function isLocalHost(host = '') {
+  const value = String(host).split(':')[0].toLowerCase();
+  return value === 'localhost' || value === '127.0.0.1' || value === '0.0.0.0' || value.startsWith('10.') || value.startsWith('192.168.') || /^172\.(1[6-9]|2\d|3[0-1])\./.test(value);
 }
 function removeUpload(file) {
   const name = path.basename(file?.filename || '');
