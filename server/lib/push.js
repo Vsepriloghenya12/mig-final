@@ -12,7 +12,7 @@ async function sendExpo(tokens, message) {
   if (process.env.PUSH_DISABLED === 'true') return;
   const valid = tokens.filter((t) => /^ExponentPushToken\[|^ExpoPushToken\[/.test(String(t)));
   if (!valid.length || typeof fetch !== 'function') return;
-  const payload = valid.map((to) => ({ to, sound: 'default', title: message.title || 'Миг', body: message.body || '', data: message.data || {} }));
+  const payload = valid.map((to) => ({ to, sound: 'default', title: message.title || 'Близз', body: message.body || '', data: message.data || {} }));
   await fetch(EXPO_PUSH_URL, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(payload.length === 1 ? payload[0] : payload) });
 }
 

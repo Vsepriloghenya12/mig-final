@@ -9,7 +9,7 @@ import { MEDIA_LIMITS } from '../config/mediaLimits';
 import { MediaView } from '../components/media/MediaView';
 import { Icon } from '../components/ui/MigIcon';
 import { Text } from '../components/ui/text';
-import { colors } from '../theme';
+import { colors, moodColors } from '../theme';
 import { useTheme } from '../theme-context';
 import { isVideoMedia } from '../utils/media';
 import { pickAndUpload, prepareCameraCapture } from '../utils/picker';
@@ -21,6 +21,14 @@ const modes = {
 };
 
 const modeOrder = ['post', 'story', 'video'];
+const moodOptions = [
+  ['joy', 'Радость'],
+  ['love', 'Любовь'],
+  ['calm', 'Спокойствие'],
+  ['energy', 'Энергия'],
+  ['dream', 'Мечта'],
+  ['focus', 'Фокус'],
+];
 
 function normalizeInitial(initial) {
   if (initial === 'create' || initial === 'story') return 'story';
@@ -34,6 +42,7 @@ export function CreateScreen({ api, reload, setActive, setData, initial = 'story
   const [kind, setKind] = useState(normalizeInitial(initial));
   const [caption, setCaption] = useState('');
   const [placeAddress, setPlaceAddress] = useState('');
+  const [mood, setMood] = useState('joy');
   const [media, setMedia] = useState(null);
   const [busy, setBusy] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -164,7 +173,7 @@ export function CreateScreen({ api, reload, setActive, setData, initial = 'story
       };
       let response;
       if (kind === 'post') response = await postActions.create(api, payload);
-      if (kind === 'story') response = await storyActions.create(api, { ...payload, mood: 'joy' });
+      if (kind === 'story') response = await storyActions.create(api, { ...payload, mood });
       if (kind === 'video') response = await videoActions.create(api, { ...payload, videoUrl: media?.url });
       if (kind === 'place') response = await placeActions.create(api, { name: text, address: placeAddress.trim(), imageUrl: media?.url || '' });
       await applyResponse(response, isPlace ? 'nearby' : current.target);
@@ -236,10 +245,31 @@ export function CreateScreen({ api, reload, setActive, setData, initial = 'story
           {modeOrder.map((key) => <ModeButton key={key} title={modes[key].title} active={kind === key} onPress={() => setMode(key)} />)}
         </View>
         <Text style={[styles.readyLabel, { color: palette.muted }]}>{mediaLabel}</Text>
+        {kind === 'story' ? <MoodPicker value={mood} onChange={setMood} /> : null}
         <MediaView item={media} style={styles.preview} controls muted={false} resizeMode={ResizeMode.CONTAIN} />
         <CaptureRow onLibrary={openLibrary} onCapture={retake} captureText="Переснять" busy={busy} />
         <Field label={current.caption} value={caption} onChangeText={setCaption} multiline autoFocus />
         <PrimaryButton title={busy ? 'Публикуем...' : current.cta} disabled={busy} onPress={submit} />
+      </ScrollView>
+    </View>
+  );
+}
+
+
+function MoodPicker({ value, onChange }) {
+  const { palette } = useTheme();
+  return (
+    <View style={styles.moodBlock}>
+      <Text style={[styles.label, { color: palette.ink }]}>Настроение</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.moodRow}>
+        {moodOptions.map(([key, title]) => {
+          const active = value === key;
+          return (
+            <Pressable key={key} onPress={() => onChange(key)} style={[styles.moodButton, { borderColor: active ? (moodColors[key] || colors.hot) : palette.line, backgroundColor: active ? (moodColors[key] || colors.hot) : palette.input }]} accessibilityRole="button" accessibilityState={{ selected: active }}>
+              <Text style={[styles.moodText, { color: active ? colors.white : palette.ink }]}>{title}</Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -337,6 +367,10 @@ const styles = StyleSheet.create({
   flipButton: { width: 76, height: 54, alignItems: 'center', justifyContent: 'center' },
   flipText: { color: colors.white, fontSize: 34, fontWeight: '900', marginTop: -5 },
   readyLabel: { fontSize: 13, fontWeight: '900', marginBottom: 10 },
+  moodBlock: { marginBottom: 16 },
+  moodRow: { gap: 10, paddingRight: 22 },
+  moodButton: { minHeight: 42, borderRadius: 21, borderWidth: 1, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
+  moodText: { fontSize: 14, fontWeight: '900' },
   placePreview: { width: '100%', height: 260, borderRadius: 24, overflow: 'hidden', marginTop: 8, backgroundColor: colors.faint },
   preview: { width: '100%', height: 420, borderRadius: 26, overflow: 'hidden', backgroundColor: colors.faint },
   captureRow: { flexDirection: 'row', gap: 12, marginTop: 18, marginBottom: 20 },

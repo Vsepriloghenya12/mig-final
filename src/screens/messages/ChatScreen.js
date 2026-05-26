@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, AppState, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { chatApi } from '../../api/chat';
+import { assets } from '../../assets';
 import { POLL_MS } from '../../config';
 import { ChatBubble } from '../../components/chat/ChatBubble';
 import { Avatar } from '../../components/ui/Avatar';
-import { Button } from '../../components/ui/button';
 import { ActionSheet, ActionSheetItem } from '../../components/ui/action-sheet';
 import { Icon } from '../../components/ui/MigIcon';
 import { Text } from '../../components/ui/text';
@@ -122,9 +122,9 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
           returnKeyType="send"
           onSubmitEditing={send}
         />
-        <Button onPress={send} disabled={!text.trim()} size="icon" variant="secondary" className="h-11 w-11 rounded-full" accessibilityLabel="Отправить">
-          <Icon name="send" color={colors.hot} size={18} />
-        </Button>
+        <Pressable onPress={send} disabled={!text.trim()} style={({ pressed }) => [styles.sendBtn, !text.trim() && styles.sendBtnDisabled, pressed && text.trim() && { transform: [{ scale: 0.96 }] }]} accessibilityRole="button" accessibilityState={{ disabled: !text.trim() }} accessibilityLabel="Отправить">
+          <Image source={assets.chatSend} style={styles.sendIcon} resizeMode="contain" />
+        </Pressable>
       </View>
 
       <ActionSheet visible={attachMenu} title="Вложение" description="Добавьте медиа или начните игру" onClose={() => setAttachMenu(false)}>
@@ -154,4 +154,7 @@ const styles = StyleSheet.create({
   inputDock: { position: 'absolute', left: 12, right: 12, minHeight: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,.98)', borderWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 7, ...shadow },
   attachBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.hot },
   input: { flex: 1, minHeight: 44, color: colors.ink, fontSize: 15, fontWeight: '700', paddingHorizontal: 4 },
+  sendBtn: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
+  sendBtnDisabled: { opacity: 0.42 },
+  sendIcon: { width: 58, height: 58 },
 });

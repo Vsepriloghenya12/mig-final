@@ -27,4 +27,5 @@ export const assets = {
   shareBrand: require('../assets/brand-icons/share.png'),
   imageBrand: require('../assets/brand-icons/nav-feed.png'),
   themeMoon: require('../assets/brand-icons/theme-moon.png'),
+  chatSend: require('../assets/brand-icons/chat-send.png'),
 };

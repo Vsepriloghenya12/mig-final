@@ -1,320 +1,317 @@
 <!doctype html>
-<html lang="ru" data-theme-preset="bgUA8q0Yj">
+<html lang="ru" data-shadcn-init="true" data-shadcn-preset="bgUA8q0Yj" data-shadcn-base="base" data-shadcn-template="react-router">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Близз — страница владельца</title>
+<title>Близз — владелец</title>
 <style>
 :root{
-  --background:222 47% 6%;
+  color-scheme:dark;
+  --background:222 47% 5%;
   --foreground:210 40% 98%;
-  --card:222 43% 8%;
+  --card:222 44% 8%;
   --card-foreground:210 40% 98%;
-  --muted:217 33% 16%;
-  --muted-foreground:215 20% 66%;
+  --popover:222 44% 8%;
+  --popover-foreground:210 40% 98%;
   --primary:330 86% 58%;
   --primary-foreground:210 40% 98%;
   --secondary:217 33% 17%;
   --secondary-foreground:210 40% 98%;
+  --muted:217 33% 14%;
+  --muted-foreground:215 20% 66%;
+  --accent:262 87% 60%;
+  --accent-foreground:210 40% 98%;
   --destructive:0 84% 60%;
+  --destructive-foreground:210 40% 98%;
   --border:217 33% 18%;
   --input:217 33% 18%;
   --ring:330 86% 58%;
   --radius:18px;
+  --shadow:0 24px 70px hsl(222 90% 2%/.38);
 }
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,hsl(330 86% 24% / .36),transparent 38%),radial-gradient(circle at 80% 0,hsl(250 90% 32% / .28),transparent 35%),hsl(var(--background));color:hsl(var(--foreground));font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1440px;margin:0 auto;padding:24px}.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;align-items:stretch}.card{border:1px solid hsl(var(--border));background:linear-gradient(180deg,hsl(var(--card)/.96),hsl(222 43% 7%/.96));border-radius:calc(var(--radius) + 8px);box-shadow:0 24px 80px hsl(222 80% 2%/.34);padding:18px}.heroCard{padding:24px}.eyebrow{display:inline-flex;border:1px solid hsl(var(--border));border-radius:999px;background:hsl(var(--secondary)/.78);color:hsl(var(--muted-foreground));padding:6px 10px;font-weight:800;font-size:12px}h1{font-size:clamp(30px,4.4vw,58px);line-height:.94;letter-spacing:-.06em;margin:18px 0 12px}h2{font-size:20px;letter-spacing:-.02em;margin:0 0 12px}.muted{color:hsl(var(--muted-foreground))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:18px}input,select,textarea{width:100%;height:42px;border:1px solid hsl(var(--input));background:hsl(var(--background)/.72);color:hsl(var(--foreground));border-radius:14px;padding:0 12px;outline:none}textarea{height:92px;padding:12px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring)/.18)}button,.btn{height:42px;border:0;border-radius:14px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));padding:0 14px;font-weight:900;cursor:pointer;white-space:nowrap}button:hover{filter:brightness(1.05)}button.secondary{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground));border:1px solid hsl(var(--border))}button.ghost{background:transparent;border:1px solid hsl(var(--border));color:hsl(var(--foreground))}button.danger{background:hsl(var(--destructive));color:white}button:disabled{opacity:.5;cursor:not-allowed}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{background:hsl(var(--secondary)/.62);border:1px solid hsl(var(--border));color:hsl(var(--muted-foreground))}.tab.active{background:hsl(var(--primary));color:white;border-color:hsl(var(--primary))}.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.stat{min-height:112px;display:flex;flex-direction:column;justify-content:space-between}.statValue{font-size:30px;font-weight:950;letter-spacing:-.04em}.statLabel{color:hsl(var(--muted-foreground));font-weight:800}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.section{display:none}.section.active{display:block}.list{display:grid;gap:10px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;border:1px solid hsl(var(--border));background:hsl(var(--muted)/.34);border-radius:18px;padding:12px}.itemMain{min-width:0}.itemTitle{font-weight:950;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis}.itemMeta{font-size:12px;color:hsl(var(--muted-foreground));overflow:hidden;text-overflow:ellipsis}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid hsl(var(--border));background:hsl(var(--secondary)/.86);color:hsl(var(--muted-foreground));font-size:12px;font-weight:900;padding:4px 8px;margin-left:6px}.badge.good{color:#8ef5b3;border-color:rgba(142,245,179,.22);background:rgba(30,160,90,.12)}.badge.bad{color:#ff9aa7;border-color:rgba(255,90,116,.24);background:rgba(255,70,110,.12)}.badge.warn{color:#ffd58a;border-color:rgba(255,213,138,.24);background:rgba(255,180,60,.12)}pre{white-space:pre-wrap;overflow:auto;max-height:520px;background:hsl(222 47% 5%);border:1px solid hsl(var(--border));border-radius:18px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:420px;border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:18px;padding:14px 16px;box-shadow:0 24px 80px hsl(222 80% 2%/.45);display:none}.toast.show{display:block}.dangerZone{border-color:hsl(var(--destructive)/.32);background:linear-gradient(180deg,hsl(0 84% 60%/.10),hsl(var(--card)/.96))}.kpiLine{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.mini{border:1px solid hsl(var(--border));border-radius:18px;padding:12px;background:hsl(var(--muted)/.28)}.mini b{display:block;font-size:21px}.mini span{color:hsl(var(--muted-foreground));font-size:12px;font-weight:800}@media(max-width:1100px){.hero,.split{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:720px){.wrap{padding:14px}.toolbar{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:1fr}.actions{justify-content:flex-start}h1{font-size:36px}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(900px 520px at 0 0,hsl(330 90% 34%/.34),transparent 60%),radial-gradient(760px 560px at 100% 0,hsl(232 95% 50%/.24),transparent 52%),linear-gradient(180deg,hsl(222 50% 6%),hsl(222 48% 4%) 46%,hsl(222 50% 5%));color:hsl(var(--foreground));font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;border-right:1px solid hsl(var(--border));background:hsl(222 44% 5%/.82);backdrop-filter:blur(22px);padding:22px;display:flex;flex-direction:column;gap:18px}.brand{display:flex;align-items:center;gap:12px}.brandMark{width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,#17d8ff,#4362ff,#f12ba7,#ff7a45);box-shadow:0 18px 45px hsl(330 86% 48%/.22)}.brand h1{font-size:19px;line-height:1;margin:0;letter-spacing:-.04em}.brand p{margin:4px 0 0;color:hsl(var(--muted-foreground));font-size:12px;font-weight:700}.nav{display:grid;gap:8px}.nav button{width:100%;justify-content:flex-start}.main{padding:24px;max-width:1560px;width:100%;margin:0 auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.headline{min-width:0}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid hsl(var(--border));border-radius:999px;background:hsl(var(--secondary)/.76);color:hsl(var(--muted-foreground));padding:6px 10px;font-size:12px;font-weight:850}.headline h2{font-size:clamp(30px,4.6vw,64px);line-height:.92;letter-spacing:-.065em;margin:14px 0 8px}.headline p{margin:0;color:hsl(var(--muted-foreground));max-width:720px;font-weight:600}.tokenCard{min-width:360px}.card{border:1px solid hsl(var(--border));background:linear-gradient(180deg,hsl(var(--card)/.96),hsl(222 44% 7%/.96));border-radius:calc(var(--radius) + 6px);box-shadow:var(--shadow);padding:18px}.panel{border:1px solid hsl(var(--border));background:hsl(var(--card)/.72);border-radius:calc(var(--radius) + 2px);padding:14px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:12px}.muted{color:hsl(var(--muted-foreground))}.small{font-size:12px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.grid{display:grid;gap:12px}.metrics{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:18px}.metric{min-height:120px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.metric:after{content:"";position:absolute;right:-30px;top:-34px;width:90px;height:90px;border-radius:999px;background:hsl(var(--primary)/.10)}.metric .label{color:hsl(var(--muted-foreground));font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}.metric .value{font-size:32px;font-weight:950;letter-spacing:-.05em}.metric .delta{font-size:12px;font-weight:850;color:hsl(var(--muted-foreground))}.section{display:none}.section.active{display:block}.sectionHeader{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 12px}.sectionHeader h3{margin:0;font-size:26px;letter-spacing:-.04em}.sectionHeader p{margin:4px 0 0}.charts{grid-template-columns:1.35fr .9fr}.charts3{grid-template-columns:1fr 1fr 1fr}.list{display:grid;gap:10px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;border:1px solid hsl(var(--border));background:hsl(var(--muted)/.36);border-radius:18px;padding:12px}.itemTitle{font-weight:950;letter-spacing:-.01em;word-break:break-word}.itemMeta{color:hsl(var(--muted-foreground));font-size:12px;font-weight:650;word-break:break-word}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid hsl(var(--border));background:hsl(var(--secondary)/.88);color:hsl(var(--muted-foreground));font-size:11px;font-weight:900;padding:4px 8px}.badge.good{color:#87efac;border-color:hsl(142 72% 55%/.24);background:hsl(142 72% 45%/.10)}.badge.bad{color:#fda4af;border-color:hsl(0 84% 60%/.30);background:hsl(0 84% 60%/.12)}.badge.warn{color:#fde68a;border-color:hsl(38 92% 50%/.30);background:hsl(38 92% 50%/.12)}button,.button{height:40px;border:0;border-radius:14px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));padding:0 14px;font-weight:950;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}button:hover{filter:brightness(1.07)}button.secondary{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground));border:1px solid hsl(var(--border))}button.ghost{background:transparent;border:1px solid hsl(var(--border));color:hsl(var(--foreground))}button.danger{background:hsl(var(--destructive));color:white}button.navButton{background:transparent;border:1px solid transparent;color:hsl(var(--muted-foreground));height:42px}button.navButton.active{background:hsl(var(--primary)/.14);border-color:hsl(var(--primary)/.36);color:white}button:disabled{opacity:.5;cursor:not-allowed}input,select,textarea{width:100%;height:40px;border:1px solid hsl(var(--input));background:hsl(var(--background)/.72);color:hsl(var(--foreground));border-radius:14px;padding:0 12px;outline:none}textarea{height:88px;resize:vertical;padding:12px}input:focus,select:focus,textarea:focus{border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring)/.18)}.filters{display:grid;grid-template-columns:1fr 190px;gap:10px}.chartCard{min-height:330px}.chartTitle{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}.chartTitle h4{margin:0;font-size:18px;letter-spacing:-.02em}.chartTitle p{margin:3px 0 0;color:hsl(var(--muted-foreground));font-size:12px}.svgChart{width:100%;height:250px;display:block}.axis{stroke:hsl(var(--border));stroke-width:1}.gridLine{stroke:hsl(var(--border));stroke-width:1;opacity:.65}.lineA{fill:none;stroke:hsl(var(--primary));stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.lineB{fill:none;stroke:hsl(var(--accent));stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.lineC{fill:none;stroke:#38bdf8;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.dot{fill:hsl(var(--background));stroke-width:2}.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}.legend span{font-size:12px;color:hsl(var(--muted-foreground));font-weight:800}.legend i{display:inline-block;width:9px;height:9px;border-radius:99px;margin-right:5px}.barRow{display:grid;grid-template-columns:92px 1fr 54px;gap:10px;align-items:center;margin:10px 0}.barTrack{height:11px;border-radius:999px;background:hsl(var(--muted));overflow:hidden}.barFill{height:100%;border-radius:999px;background:linear-gradient(90deg,hsl(var(--primary)),hsl(var(--accent)))}.donutWrap{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center}.donut{width:160px;height:160px;border-radius:999px;background:conic-gradient(hsl(var(--primary)) 0deg,var(--end),hsl(var(--muted)) var(--end) 360deg);position:relative;box-shadow:inset 0 0 0 1px hsl(var(--border))}.donut:after{content:"";position:absolute;inset:28px;border-radius:999px;background:hsl(var(--card));box-shadow:inset 0 0 0 1px hsl(var(--border))}.donutCenter{position:absolute;inset:0;display:grid;place-items:center;z-index:2;font-size:28px;font-weight:950}.table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:18px}.table th,.table td{text-align:left;border-bottom:1px solid hsl(var(--border));padding:11px 10px;vertical-align:top}.table th{color:hsl(var(--muted-foreground));font-size:12px;text-transform:uppercase;letter-spacing:.05em}.table tr:hover td{background:hsl(var(--muted)/.25)}pre{white-space:pre-wrap;overflow:auto;max-height:640px;background:hsl(222 50% 4%);border:1px solid hsl(var(--border));border-radius:18px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:460px;border:1px solid hsl(var(--border));background:hsl(var(--popover));color:hsl(var(--popover-foreground));border-radius:18px;padding:14px 16px;box-shadow:0 24px 80px hsl(222 90% 2%/.55);display:none;z-index:20}.toast.show{display:block}.dangerZone{border-color:hsl(var(--destructive)/.34);background:linear-gradient(180deg,hsl(0 84% 60%/.10),hsl(var(--card)/.96))}.commandHint{font-size:11px;color:hsl(var(--muted-foreground));border:1px dashed hsl(var(--border));border-radius:14px;padding:9px;background:hsl(var(--muted)/.20)}@media(max-width:1200px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid hsl(var(--border))}.nav{grid-template-columns:repeat(3,1fr)}.main{padding:18px}.topbar{display:grid}.tokenCard{min-width:0}.metrics{grid-template-columns:repeat(3,1fr)}.charts,.charts3{grid-template-columns:1fr}.donutWrap{grid-template-columns:1fr}.donut{margin:auto}}@media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.item{grid-template-columns:1fr}.actions{justify-content:flex-start}.nav{grid-template-columns:1fr 1fr}.headline h2{font-size:38px}.tableWrap{overflow:auto}}
 </style>
+</head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <section class="card heroCard">
-      <span class="eyebrow">Owner console · shadcn preset bgUA8q0Yj</span>
-      <h1>Страница владельца Близз</h1>
-      <p class="muted">Статистика приложения, пользователи, контент, жалобы и критические рычаги управления в одном месте.</p>
-      <div class="toolbar">
-        <input id="token" placeholder="OWNER_TOKEN" autocomplete="off">
-        <button id="loadBtn">Загрузить</button>
-        <button class="secondary" id="saveTokenBtn">Сохранить токен</button>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brandMark"></div><div><h1>Близз owner</h1><p>React Router-style dashboard</p></div></div>
+    <div class="commandHint">shadcn init applied for owner page<br><span class="mono">preset bgUA8q0Yj · base · react-router</span></div>
+    <nav class="nav" id="nav">
+      <button class="navButton active" data-route="overview">Обзор</button>
+      <button class="navButton" data-route="users">Пользователи</button>
+      <button class="navButton" data-route="content">Контент</button>
+      <button class="navButton" data-route="reports">Жалобы</button>
+      <button class="navButton" data-route="messages">Сообщения</button>
+      <button class="navButton" data-route="system">Система</button>
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="headline">
+        <span class="eyebrow">Owner console · metrics · moderation</span>
+        <h2>Панель владельца</h2>
+        <p>Все ключевые метрики приложения, графики активности, пользователи, контент, жалобы, сообщения и критические действия.</p>
       </div>
-    </section>
-    <section class="card dangerZone">
-      <h2>Критические действия</h2>
-      <p class="muted">Используйте только после проверки. Сброс базы удаляет все данные приложения.</p>
-      <div class="row">
-        <button class="danger" id="resetBtn">Сбросить базу</button>
-        <button class="secondary" id="downloadBtn">Скачать JSON</button>
-      </div>
-      <div class="kpiLine">
-        <div class="mini"><b id="kpiUsers">—</b><span>пользователей</span></div>
-        <div class="mini"><b id="kpiContent">—</b><span>контента</span></div>
-        <div class="mini"><b id="kpiReports">—</b><span>открытых жалоб</span></div>
-      </div>
-    </section>
-  </div>
-
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-section="overview">Обзор</button>
-    <button class="tab" data-section="users">Пользователи</button>
-    <button class="tab" data-section="content">Контент</button>
-    <button class="tab" data-section="reports">Жалобы</button>
-    <button class="tab" data-section="raw">База</button>
-  </div>
-
-  <section id="overview" class="section active">
-    <div id="stats" class="grid"></div>
-    <div class="split" style="margin-top:12px">
-      <div class="card"><h2>Активность</h2><div id="activity" class="list"></div></div>
-      <div class="card"><h2>Последние действия модерации</h2><div id="moderationActions" class="list muted">Нет данных</div></div>
+      <section class="card tokenCard stack">
+        <div class="row"><input id="token" placeholder="OWNER_TOKEN" autocomplete="off"><button id="loadBtn">Загрузить</button></div>
+        <div class="row"><button class="secondary" id="saveTokenBtn">Сохранить токен</button><button class="ghost" id="downloadBtn">Экспорт JSON</button></div>
+      </section>
     </div>
-  </section>
 
-  <section id="users" class="section">
-    <div class="card"><div class="row"><input id="userSearch" placeholder="Поиск пользователя: имя, телефон, id" style="flex:1"><select id="userFilter" style="max-width:180px"><option value="all">Все</option><option value="active">Активные</option><option value="blocked">Заблокированные</option></select></div></div>
-    <div id="usersList" class="list"></div>
-  </section>
+    <section id="overview" class="section active">
+      <div id="metrics" class="grid metrics"></div>
+      <div class="grid charts" style="margin-top:12px">
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Динамика за 14 дней</h4><p>Пользователи, контент и сообщения по дням.</p></div></div><div id="activityChart"></div></article>
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Статус контента</h4><p>Активный и удалённый контент.</p></div></div><div id="statusChart"></div></article>
+      </div>
+      <div class="grid charts3" style="margin-top:12px">
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Контент по типам</h4><p>Посты, Близзы, видео и места.</p></div></div><div id="contentTypeChart"></div></article>
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Топ авторов</h4><p>Рейтинг по контенту и вовлечению.</p></div></div><div id="topCreatorsChart"></div></article>
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Модерация</h4><p>Жалобы и действия владельца.</p></div></div><div id="moderationChart"></div></article>
+      </div>
+      <div class="grid charts" style="margin-top:12px">
+        <article class="card"><div class="chartTitle"><div><h4>Последний контент</h4><p>Свежие публикации и места.</p></div></div><div id="recentContent" class="list"></div></article>
+        <article class="card"><div class="chartTitle"><div><h4>Последние пользователи</h4><p>Новые и вернувшиеся аккаунты.</p></div></div><div id="recentUsers" class="list"></div></article>
+      </div>
+    </section>
 
-  <section id="content" class="section">
-    <div class="card"><div class="row"><input id="contentSearch" placeholder="Поиск контента: подпись, автор, id" style="flex:1"><select id="contentFilter" style="max-width:180px"><option value="all">Весь контент</option><option value="active">Активный</option><option value="deleted">Удалённый</option></select></div></div>
-    <div id="contentList" class="list"></div>
-  </section>
+    <section id="users" class="section">
+      <div class="sectionHeader"><div><h3>Пользователи</h3><p class="muted">Поиск, блокировка, разблокировка и удаление аккаунтов.</p></div></div>
+      <div class="card"><div class="filters"><input id="userSearch" placeholder="Поиск: имя, ник, телефон, id"><select id="userFilter"><option value="all">Все</option><option value="active">Активные</option><option value="blocked">Заблокированные</option></select></div></div>
+      <div id="usersList" class="list" style="margin-top:12px"></div>
+    </section>
 
-  <section id="reports" class="section">
-    <div id="reportsList" class="list"></div>
-  </section>
+    <section id="content" class="section">
+      <div class="sectionHeader"><div><h3>Контент</h3><p class="muted">Посты, Близзы, видео и места. Удаление и восстановление.</p></div></div>
+      <div class="card"><div class="filters"><input id="contentSearch" placeholder="Поиск: текст, автор, id"><select id="contentFilter"><option value="all">Весь контент</option><option value="active">Активный</option><option value="deleted">Удалённый</option></select></div></div>
+      <div id="contentList" class="list" style="margin-top:12px"></div>
+    </section>
 
-  <section id="raw" class="section">
-    <div class="card"><h2>Сырые данные</h2><pre id="out">Введите токен и загрузите данные.</pre></div>
-  </section>
+    <section id="reports" class="section">
+      <div class="sectionHeader"><div><h3>Жалобы</h3><p class="muted">Очередь модерации и быстрые действия.</p></div></div>
+      <div id="reportsList" class="list"></div>
+    </section>
+
+    <section id="messages" class="section">
+      <div class="sectionHeader"><div><h3>Сообщения</h3><p class="muted">Диалоги, объём сообщений и последние переписки.</p></div></div>
+      <div class="grid charts" style="margin-bottom:12px">
+        <article class="card chartCard"><div class="chartTitle"><div><h4>Сообщения за 14 дней</h4><p>Активность переписок по дням.</p></div></div><div id="messagesChart"></div></article>
+        <article class="card"><div class="chartTitle"><div><h4>Метрики сообщений</h4><p>Диалоги, сообщения, среднее на диалог.</p></div></div><div id="messageMetrics" class="grid metrics" style="grid-template-columns:repeat(2,1fr);margin-top:0"></div></article>
+      </div>
+      <div id="dialogsList" class="list"></div>
+    </section>
+
+    <section id="system" class="section">
+      <div class="sectionHeader"><div><h3>Система</h3><p class="muted">Экспорт, сырые данные и опасные действия.</p></div></div>
+      <div class="grid charts">
+        <article class="card dangerZone stack"><h4 style="margin:0;font-size:20px">Критическая зона</h4><p class="muted">Сброс базы удалит пользователей, контент, сообщения и жалобы.</p><button class="danger" id="resetBtn">Сбросить базу</button></article>
+        <article class="card"><h4 style="margin:0 0 10px;font-size:20px">Все метрики</h4><div id="allMetrics" class="list"></div></article>
+      </div>
+      <div class="card" style="margin-top:12px"><h4 style="margin:0 0 12px;font-size:20px">Сырые данные</h4><pre id="out">Введите OWNER_TOKEN и нажмите «Загрузить».</pre></div>
+    </section>
+  </main>
 </div>
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
 let db = null;
-let statsData = null;
+let stats = null;
 const $ = (id) => document.getElementById(id);
-const el = (tag, className, text) => { const n = document.createElement(tag); if (className) n.className = className; if (text !== undefined) n.textContent = text; return n; };
 const fmt = (n) => new Intl.NumberFormat('ru-RU').format(Number(n || 0));
 const date = (x) => x ? new Date(x).toLocaleString('ru-RU') : '—';
-const tokenValue = () => $('token').value.trim();
-
+const clean = (x) => String(x || '').trim();
+const tokenValue = () => clean($('token').value);
+const labelType = { post: 'Пост', blizz: 'Близз', story: 'Близз', video: 'Видео', place: 'Место' };
 $('token').value = localStorage.getItem('blizz.owner.token') || '';
-$('saveTokenBtn').addEventListener('click', () => { localStorage.setItem('blizz.owner.token', tokenValue()); show('Токен сохранён локально в браузере.'); });
+$('saveTokenBtn').addEventListener('click', () => { localStorage.setItem('blizz.owner.token', tokenValue()); show('Токен сохранён.'); });
 $('loadBtn').addEventListener('click', load);
-$('resetBtn').addEventListener('click', resetDb);
 $('downloadBtn').addEventListener('click', downloadJson);
+$('resetBtn').addEventListener('click', resetDb);
 $('userSearch').addEventListener('input', renderUsers);
 $('userFilter').addEventListener('change', renderUsers);
 $('contentSearch').addEventListener('input', renderContent);
 $('contentFilter').addEventListener('change', renderContent);
-
-document.querySelectorAll('.tab').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
-  document.querySelectorAll('.section').forEach((x) => x.classList.remove('active'));
-  button.classList.add('active');
-  $(button.dataset.section).classList.add('active');
-}));
-
+document.querySelectorAll('.navButton').forEach((button) => button.addEventListener('click', () => route(button.dataset.route)));
+window.addEventListener('hashchange', () => route((location.hash || '#/overview').replace('#/', ''), false));
+function route(name = 'overview', push = true) {
+  const target = $(name) ? name : 'overview';
+  document.querySelectorAll('.navButton').forEach((x) => x.classList.toggle('active', x.dataset.route === target));
+  document.querySelectorAll('.section').forEach((x) => x.classList.toggle('active', x.id === target));
+  if (push) location.hash = `/${target}`;
+}
 async function req(path, options = {}) {
-  const response = await fetch('/api/' + path, {
-    ...options,
+  const response = await fetch(`/api/${path}`, {
+    method: options.method || 'GET',
     headers: { 'Content-Type': 'application/json', 'x-owner-token': tokenValue(), ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.error || 'HTTP ' + response.status);
-  return data;
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+  return payload;
 }
-
 async function load() {
+  if (!tokenValue()) return show('Введите OWNER_TOKEN.', true);
   try {
-    [db, statsData] = await Promise.all([req('owner/data'), req('owner/stats')]);
+    [db, stats] = await Promise.all([req('owner/data'), req('owner/stats')]);
+    $('out').textContent = JSON.stringify(db, null, 2);
     renderAll();
     show('Данные загружены.');
   } catch (error) { show(error.message, true); }
 }
-
-function renderAll() {
-  renderStats(); renderActivity(); renderActions(); renderUsers(); renderContent(); renderReports();
-  $('out').textContent = JSON.stringify(db, null, 2);
-  $('kpiUsers').textContent = fmt(statsData.users);
-  $('kpiContent').textContent = fmt(statsData.activeContent + statsData.deletedContent);
-  $('kpiReports').textContent = fmt(statsData.openReports);
+function renderAll() { renderMetrics(); renderCharts(); renderRecent(); renderUsers(); renderContent(); renderReports(); renderMessages(); renderAllMetrics(); }
+function metric(label, value, delta) { return `<article class="card metric"><div class="label">${label}</div><div class="value">${fmt(value)}</div><div class="delta">${delta || ''}</div></article>`; }
+function renderMetrics() {
+  const t = stats?.totals || {};
+  const r = stats?.rates || {};
+  $('metrics').innerHTML = [
+    metric('Пользователи', t.users, `+${fmt(t.users7d)} за 7 дней`),
+    metric('Активные', t.activeUsers, `${r.activeUserRate || 0}% активных`),
+    metric('Контент', t.content, `+${fmt(t.content7d)} за 7 дней`),
+    metric('Сообщения', t.messages, `+${fmt(t.messages7d)} за 7 дней`),
+    metric('Жалобы', t.openReports, `${r.reportResolutionRate || 0}% закрыто`),
+    metric('Медиа', `${t.mediaMb || 0} МБ`, `${fmt(t.mediaFiles)} файлов`),
+    metric('Посты', t.posts, 'главная лента'),
+    metric('Близзы', t.blizzes, 'stories-лента'),
+    metric('Видео', t.videos, 'видео-лента'),
+    metric('Места', t.places, 'раздел рядом'),
+    metric('Реакции', t.likes, `${fmt(t.comments)} комментариев`),
+    metric('Push tokens', t.pushTokens, `${r.pushCoverage || 0}% coverage`),
+  ].join('');
 }
-
-function renderStats() {
-  const cards = [
-    ['Пользователи', statsData.users], ['Активные', statsData.activeUsers], ['Заблокированные', statsData.blockedUsers],
-    ['Посты', statsData.posts], ['Близзы', statsData.stories], ['Видео', statsData.videos],
-    ['Места', statsData.places], ['Диалоги', statsData.dialogs], ['Сообщения', statsData.messages],
-    ['Игры', statsData.games], ['Лайки', statsData.likes], ['Комментарии', statsData.comments],
-    ['Жалобы', statsData.reports], ['Открытые жалобы', statsData.openReports], ['Действия модерации', statsData.moderationActions],
-    ['Уведомления', statsData.notifications], ['Контент сегодня', statsData.contentToday], ['Сообщения сегодня', statsData.messagesToday],
-  ];
-  replace($('stats'), cards.map(([label, value]) => statCard(label, value)));
+function renderCharts() {
+  renderLineChart('activityChart', stats.series || [], [
+    { key: 'users', label: 'Пользователи', cls: 'lineA' },
+    { key: 'content', label: 'Контент', cls: 'lineB' },
+    { key: 'messages', label: 'Сообщения', cls: 'lineC' },
+  ]);
+  renderLineChart('messagesChart', stats.series || [], [{ key: 'messages', label: 'Сообщения', cls: 'lineA' }]);
+  renderDonut('statusChart', stats.status || []);
+  renderBars('contentTypeChart', stats.contentTypes || [], 'type', 'total');
+  renderBars('topCreatorsChart', stats.topCreators || [], 'name', 'score');
+  renderBars('moderationChart', stats.moderation || [], 'name', 'value');
 }
-
-function statCard(label, value) {
-  const node = el('div', 'card stat');
-  node.append(el('div', 'statValue', fmt(value)));
-  node.append(el('div', 'statLabel', label));
-  return node;
+function renderLineChart(id, rows, series) {
+  const w = 760, h = 250, pad = 34;
+  const max = Math.max(1, ...rows.flatMap((r) => series.map((s) => Number(r[s.key] || 0))));
+  const x = (i) => pad + (rows.length <= 1 ? 0 : i * ((w - pad * 2) / (rows.length - 1)));
+  const y = (v) => h - pad - (Number(v || 0) / max) * (h - pad * 2);
+  const grid = [0,.25,.5,.75,1].map((p) => `<line class="gridLine" x1="${pad}" y1="${pad + p*(h-pad*2)}" x2="${w-pad}" y2="${pad + p*(h-pad*2)}"/>`).join('');
+  const lines = series.map((s) => {
+    const points = rows.map((r,i) => `${x(i)},${y(r[s.key])}`).join(' ');
+    const dots = rows.map((r,i) => `<circle class="dot" cx="${x(i)}" cy="${y(r[s.key])}" r="3" stroke="${s.cls === 'lineB' ? 'hsl(var(--accent))' : s.cls === 'lineC' ? '#38bdf8' : 'hsl(var(--primary))'}"/>`).join('');
+    return `<polyline class="${s.cls}" points="${points}"/>${dots}`;
+  }).join('');
+  const labels = rows.filter((_,i) => i % Math.ceil(rows.length / 7) === 0 || i === rows.length - 1).map((r,i,arr) => {
+    const realIndex = rows.findIndex((x) => x.iso === r.iso);
+    return `<text x="${x(realIndex)}" y="${h-7}" text-anchor="middle" fill="hsl(var(--muted-foreground))" font-size="11" font-weight="700">${r.day}</text>`;
+  }).join('');
+  const legend = `<div class="legend">${series.map((s) => `<span><i style="background:${s.cls === 'lineB' ? 'hsl(var(--accent))' : s.cls === 'lineC' ? '#38bdf8' : 'hsl(var(--primary))'}"></i>${s.label}</span>`).join('')}</div>`;
+  $(id).innerHTML = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${grid}<line class="axis" x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}"/>${lines}${labels}<text x="${pad}" y="18" fill="hsl(var(--muted-foreground))" font-size="11" font-weight="800">${fmt(max)}</text></svg>${legend}`;
 }
-
-function renderActivity() {
-  const rows = [
-    ['Новые пользователи сегодня', statsData.usersToday],
-    ['Новые пользователи за 7 дней', statsData.users7d],
-    ['Контент за 7 дней', statsData.content7d],
-    ['Удалённый контент', statsData.deletedContent],
-    ['Решённые жалобы', statsData.resolvedReports],
-  ];
-  replace($('activity'), rows.map(([label, value]) => simpleItem(label, fmt(value))));
+function renderBars(id, rows, labelKey, valueKey) {
+  const max = Math.max(1, ...rows.map((r) => Number(r[valueKey] || 0)));
+  $(id).innerHTML = rows.length ? rows.map((r) => {
+    const value = Number(r[valueKey] || 0);
+    const label = String(r[labelKey] || '—').slice(0, 22);
+    return `<div class="barRow"><div class="small" title="${escapeHtml(String(r[labelKey] || ''))}">${escapeHtml(label)}</div><div class="barTrack"><div class="barFill" style="width:${Math.max(3, value / max * 100)}%"></div></div><b>${fmt(value)}</b></div>`;
+  }).join('') : '<p class="muted">Нет данных.</p>';
 }
-
-function renderActions() {
-  const list = (db.moderationActions || []).slice().reverse().slice(0, 12);
-  replace($('moderationActions'), list.length ? list.map((x) => simpleItem(x.type || 'action', `${x.targetId || ''} · ${date(x.createdAt)}`)) : [el('div', 'muted', 'Нет действий')]);
+function renderDonut(id, rows) {
+  const total = rows.reduce((s,x) => s + Number(x.value || 0), 0) || 1;
+  const first = Number(rows[0]?.value || 0);
+  const deg = Math.round(first / total * 360);
+  $(id).innerHTML = `<div class="donutWrap"><div class="donut" style="--end:${deg}deg"><div class="donutCenter">${Math.round(first / total * 100)}%</div></div><div class="stack">${rows.map((r,i)=>`<div class="row"><span class="badge ${i===0?'good':'bad'}">${escapeHtml(r.name)}</span><b>${fmt(r.value)}</b></div>`).join('')}<p class="muted small">Доля активного контента считается от всех постов, Близзов, видео и мест.</p></div></div>`;
 }
-
+function renderRecent() {
+  $('recentContent').innerHTML = (stats.recent?.content || []).slice(0,8).map((x) => itemHtml(`${labelType[x.type] || x.type}: ${x.caption || x.id}`, `${x.authorName || x.authorId} · ${date(x.createdAt)}`, statusBadge(x.status))).join('') || '<p class="muted">Нет контента.</p>';
+  $('recentUsers').innerHTML = (stats.recent?.users || []).slice(0,8).map((u) => itemHtml(u.name || u.handle || u.id, `${u.handle || ''} ${u.phone || ''} · ${date(u.createdAt)}`, statusBadge(u.status))).join('') || '<p class="muted">Нет пользователей.</p>';
+}
 function renderUsers() {
   if (!db) return;
-  const query = $('userSearch').value.trim().toLowerCase();
+  const q = clean($('userSearch').value).toLowerCase();
   const filter = $('userFilter').value;
-  const users = (db.users || []).slice().sort((a,b) => String(b.lastLoginAt || b.createdAt || '').localeCompare(String(a.lastLoginAt || a.createdAt || ''))).filter((u) => {
-    const hay = [u.id, u.name, u.handle, u.phone, u.bio, u.status].join(' ').toLowerCase();
-    if (query && !hay.includes(query)) return false;
-    if (filter === 'active' && u.status === 'blocked') return false;
-    if (filter === 'blocked' && u.status !== 'blocked') return false;
-    return true;
-  });
-  replace($('usersList'), users.length ? users.map(userRow) : [empty('Пользователи не найдены')]);
+  const users = (db.users || []).filter((u) => {
+    const hay = [u.id,u.name,u.handle,u.phone,u.bio,u.status].join(' ').toLowerCase();
+    return (!q || hay.includes(q)) && (filter === 'all' || (filter === 'blocked' ? u.status === 'blocked' : u.status !== 'blocked'));
+  }).sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'ru'));
+  $('usersList').innerHTML = users.map((u) => {
+    const isBlocked = u.status === 'blocked';
+    const meta = `${u.handle || '—'} · ${u.phone || 'без телефона'} · followers ${fmt((u.followers || []).length)} · following ${fmt((u.following || []).length)} · push ${(u.pushTokens || []).length}`;
+    const actions = `<div class="actions"><button class="${isBlocked ? 'secondary' : 'danger'}" onclick="toggleUser('${u.id}', ${isBlocked ? 'false' : 'true'})">${isBlocked ? 'Разблокировать' : 'Заблокировать'}</button><button class="ghost" onclick="deleteUser('${u.id}')">Удалить</button></div>`;
+    return itemHtml(u.name || u.id, meta, `${statusBadge(u.status)}${actions}`);
+  }).join('') || '<div class="card muted">Пользователи не найдены.</div>';
 }
-
-function userRow(user) {
-  const node = el('div', 'item');
-  const main = el('div', 'itemMain');
-  const title = el('div', 'itemTitle', user.name || 'Без имени');
-  title.append(badge(user.status === 'blocked' ? 'blocked' : 'active', user.status === 'blocked' ? 'bad' : 'good'));
-  main.append(title);
-  main.append(el('div', 'itemMeta', `${user.handle || '@user'} · ${user.phone || 'телефон не указан'} · ${user.id}`));
-  main.append(el('div', 'itemMeta', `Постов: ${countBy('posts', user.id)} · Близзов: ${countBy('stories', user.id)} · Видео: ${countBy('videos', user.id)} · Вход: ${date(user.lastLoginAt)}`));
-  const actions = el('div', 'actions');
-  actions.append(button(user.status === 'blocked' ? 'Разблокировать' : 'Заблокировать', user.status === 'blocked' ? 'secondary' : 'danger', () => blockUser(user.id, user.status !== 'blocked')));
-  actions.append(button('Удалить аккаунт', 'danger', () => deleteUser(user.id)));
-  node.append(main, actions);
-  return node;
-}
-
 function renderContent() {
   if (!db) return;
-  const query = $('contentSearch').value.trim().toLowerCase();
-  const filter = $('contentFilter').value;
-  const rows = contentRows().filter((x) => {
-    const hay = [x.type, x.id, x.caption, x.name, x.author?.name, x.author?.id, x.status].join(' ').toLowerCase();
-    if (query && !hay.includes(query)) return false;
-    if (filter === 'active' && x.status === 'deleted') return false;
-    if (filter === 'deleted' && x.status !== 'deleted') return false;
-    return true;
-  });
-  replace($('contentList'), rows.length ? rows.map(contentRow) : [empty('Контент не найден')]);
-}
-
-function contentRows() {
   const users = new Map((db.users || []).map((u) => [u.id, u]));
-  const map = (list, type) => (list || []).map((x) => ({ ...x, type, author: users.get(x.authorId || x.userId || x.ownerId) }));
-  return [...map(db.posts, 'post'), ...map(db.stories, 'story'), ...map(db.videos, 'video'), ...map(db.places, 'place')].sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  const q = clean($('contentSearch').value).toLowerCase();
+  const filter = $('contentFilter').value;
+  const all = [
+    ...(db.posts || []).map((x) => ({ ...x, type: 'post' })),
+    ...(db.stories || []).map((x) => ({ ...x, type: 'blizz' })),
+    ...(db.videos || []).map((x) => ({ ...x, type: 'video' })),
+    ...(db.places || []).map((x) => ({ ...x, type: 'place' })),
+  ].filter((x) => {
+    const author = users.get(x.authorId || x.userId || x.ownerId);
+    const hay = [x.id,x.caption,x.text,x.name,x.location,author?.name,author?.handle,x.type,x.status].join(' ').toLowerCase();
+    return (!q || hay.includes(q)) && (filter === 'all' || (filter === 'deleted' ? x.status === 'deleted' : x.status !== 'deleted'));
+  }).sort((a,b) => Date.parse(b.createdAt || b.updatedAt || 0) - Date.parse(a.createdAt || a.updatedAt || 0));
+  $('contentList').innerHTML = all.map((x) => {
+    const author = users.get(x.authorId || x.userId || x.ownerId);
+    const title = `${labelType[x.type] || x.type}: ${x.caption || x.text || x.name || x.id}`;
+    const meta = `${author?.name || author?.handle || 'автор неизвестен'} · ${date(x.createdAt || x.updatedAt)} · ${x.id}`;
+    const actions = x.status === 'deleted' ? `<button class="secondary" onclick="restoreContent('${x.type}','${x.id}')">Восстановить</button>` : `<button class="danger" onclick="deleteContent('${x.type}','${x.id}')">Удалить</button>`;
+    return itemHtml(title, meta, `${statusBadge(x.status)}<div class="actions">${actions}</div>`);
+  }).join('') || '<div class="card muted">Контент не найден.</div>';
 }
-
-function contentRow(item) {
-  const node = el('div', 'item');
-  const main = el('div', 'itemMain');
-  const title = el('div', 'itemTitle', item.caption || item.name || item.type);
-  title.append(badge(item.type, 'warn'));
-  title.append(badge(item.status === 'deleted' ? 'deleted' : 'active', item.status === 'deleted' ? 'bad' : 'good'));
-  main.append(title);
-  main.append(el('div', 'itemMeta', `Автор: ${item.author?.name || item.authorId || item.userId || '—'} · ${item.id}`));
-  main.append(el('div', 'itemMeta', `Создано: ${date(item.createdAt)} · лайки: ${(item.likedBy || []).length} · комментарии: ${(item.comments || []).length}`));
-  const actions = el('div', 'actions');
-  if (item.status === 'deleted') actions.append(button('Восстановить', 'secondary', () => restoreContent(item.type, item.id)));
-  else actions.append(button('Удалить', 'danger', () => deleteContent(item.type, item.id)));
-  node.append(main, actions);
-  return node;
-}
-
 function renderReports() {
   if (!db) return;
-  const list = (db.reports || []).slice().reverse();
-  replace($('reportsList'), list.length ? list.map(reportRow) : [empty('Жалоб нет')]);
+  const users = new Map((db.users || []).map((u) => [u.id, u]));
+  const reports = [...(db.reports || [])].sort((a,b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0));
+  $('reportsList').innerHTML = reports.map((r) => {
+    const reporter = users.get(r.reporterId || r.userId);
+    const target = users.get(r.targetUserId);
+    const title = `${r.reason || r.type || 'Жалоба'} · ${statusBadge(r.status)}`;
+    const meta = `от: ${reporter?.name || r.reporterId || r.userId || '—'} · цель: ${target?.name || r.targetUserId || r.targetId || '—'} · ${date(r.createdAt)}`;
+    const actions = `<div class="actions"><button class="secondary" onclick="resolveReport('${r.id}')">Закрыть</button>${r.targetUserId ? `<button class="danger" onclick="toggleUser('${r.targetUserId}', true)">Блок автора</button>` : ''}</div>`;
+    return itemHtml(title, meta, actions);
+  }).join('') || '<div class="card muted">Жалоб нет.</div>';
 }
-
-function reportRow(report) {
-  const node = el('div', 'item');
-  const main = el('div', 'itemMain');
-  const title = el('div', 'itemTitle', report.reason || 'Жалоба');
-  title.append(badge(report.status || 'open', report.status === 'resolved' ? 'good' : 'bad'));
-  title.append(badge(report.targetType || 'target', 'warn'));
-  main.append(title);
-  main.append(el('div', 'itemMeta', `target: ${report.targetId || '—'} · author: ${report.targetUserId || '—'} · reporter: ${report.reporterId || '—'}`));
-  main.append(el('div', 'itemMeta', `${date(report.createdAt)} · ${report.details || ''}`));
-  const actions = el('div', 'actions');
-  if (report.status !== 'resolved') actions.append(button('Закрыть', 'secondary', () => resolveReport(report.id)));
-  if (report.targetType && report.targetId) actions.append(button('Удалить контент', 'danger', () => deleteContent(report.targetType, report.targetId)));
-  if (report.targetUserId) actions.append(button('Блок автора', 'danger', () => blockUser(report.targetUserId, true)));
-  node.append(main, actions);
-  return node;
+function renderMessages() {
+  if (!db || !stats) return;
+  const t = stats.totals || {}, r = stats.rates || {};
+  $('messageMetrics').innerHTML = [metric('Диалоги', t.dialogs, `${r.messagesPerDialog || 0} сообщений/диалог`), metric('Сообщения', t.messages, `+${fmt(t.messages7d)} за 7 дней`), metric('Сегодня', t.messagesToday, 'новые сообщения'), metric('Уведомления', t.notifications, 'в очереди')].join('');
+  const users = new Map((db.users || []).map((u) => [u.id, u]));
+  const messages = db.messages || [];
+  const dialogs = (db.dialogs || []).map((d) => {
+    const last = messages.filter((m) => m.dialogId === d.id).sort((a,b) => Date.parse(b.createdAt || b.sentAt || 0) - Date.parse(a.createdAt || a.sentAt || 0))[0];
+    return { ...d, last, count: messages.filter((m) => m.dialogId === d.id).length };
+  }).sort((a,b) => Date.parse(b.last?.createdAt || b.updatedAt || 0) - Date.parse(a.last?.createdAt || a.updatedAt || 0));
+  $('dialogsList').innerHTML = dialogs.map((d) => {
+    const names = (d.participantIds || []).map((id) => users.get(id)?.name || users.get(id)?.handle || id).join(' · ');
+    return itemHtml(names || d.id, `${d.last?.text || 'Нет сообщений'} · ${date(d.last?.createdAt || d.last?.sentAt || d.updatedAt)} · ${fmt(d.count)} сообщений`, '<span class="badge good">диалог</span>');
+  }).join('') || '<div class="card muted">Диалогов нет.</div>';
 }
-
-function countBy(collection, userId) { return (db[collection] || []).filter((x) => (x.authorId || x.userId || x.ownerId) === userId).length; }
-function simpleItem(title, meta) { const n = el('div', 'item'); const main = el('div', 'itemMain'); main.append(el('div', 'itemTitle', title)); main.append(el('div', 'itemMeta', meta)); n.append(main); return n; }
-function empty(text) { return el('div', 'card muted', text); }
-function badge(text, tone) { const n = el('span', `badge ${tone || ''}`); n.textContent = text; return n; }
-function button(text, cls, fn) { const b = el('button', cls, text); b.addEventListener('click', fn); return b; }
-function replace(target, children) { target.replaceChildren(...children); }
-
-async function blockUser(id, shouldBlock) {
-  if (!confirm(shouldBlock ? 'Заблокировать пользователя?' : 'Разблокировать пользователя?')) return;
-  try { await req(`owner/users/${encodeURIComponent(id)}/block`, { method: 'POST', body: { block: shouldBlock, reason: 'owner console' } }); await load(); }
-  catch (error) { show(error.message, true); }
+function renderAllMetrics() {
+  if (!stats) return;
+  const pairs = [];
+  Object.entries(stats.totals || {}).forEach(([k,v]) => pairs.push([k,v]));
+  Object.entries(stats.rates || {}).forEach(([k,v]) => pairs.push([k, `${v}${String(k).toLowerCase().includes('rate') || String(k).includes('Coverage') ? '%' : ''}`]));
+  $('allMetrics').innerHTML = pairs.map(([k,v]) => itemHtml(k, String(v), '')).join('');
 }
-async function deleteUser(id) {
-  if (!confirm('Удалить аккаунт и все данные пользователя?')) return;
-  try { await req(`owner/users/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
-  catch (error) { show(error.message, true); }
-}
-async function deleteContent(type, id) {
-  if (!confirm('Удалить контент?')) return;
-  try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
-  catch (error) { show(error.message, true); }
-}
-async function restoreContent(type, id) {
-  try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/restore`, { method: 'POST', body: { reason: 'owner console' } }); await load(); }
-  catch (error) { show(error.message, true); }
-}
-async function resolveReport(id) {
-  try { await req(`owner/reports/${encodeURIComponent(id)}/resolve`, { method: 'POST', body: { resolution: 'reviewed in owner console' } }); await load(); }
-  catch (error) { show(error.message, true); }
-}
-async function resetDb() {
-  if (!confirm('Точно сбросить всю базу?')) return;
-  try { await req('owner/reset', { method: 'POST' }); await load(); }
-  catch (error) { show(error.message, true); }
-}
-function downloadJson() {
-  if (!db) return show('Сначала загрузите данные.', true);
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `blizz-db-${new Date().toISOString().slice(0,10)}.json`; a.click();
-  URL.revokeObjectURL(url);
-}
-function show(message, danger) {
-  const toast = $('toast');
-  toast.textContent = message;
-  toast.style.borderColor = danger ? 'hsl(var(--destructive) / .55)' : 'hsl(var(--border))';
-  toast.classList.add('show');
-  clearTimeout(show.timer);
-  show.timer = setTimeout(() => toast.classList.remove('show'), 3200);
-}
+function itemHtml(title, meta, side) { return `<article class="item"><div><div class="itemTitle">${escapeHtml(String(title || '—'))}</div><div class="itemMeta">${escapeHtml(String(meta || ''))}</div></div><div>${side || ''}</div></article>`; }
+function statusBadge(status = 'active') { const s = status || 'active'; return `<span class="badge ${s === 'blocked' || s === 'deleted' ? 'bad' : s === 'resolved' ? 'good' : s === 'open' ? 'warn' : 'good'}">${escapeHtml(s)}</span>`; }
+function escapeHtml(text) { return String(text || '').replace(/[&<>'"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[c])); }
+async function toggleUser(id, block) { if (!confirm(block ? 'Заблокировать пользователя?' : 'Разблокировать пользователя?')) return; try { await req(`owner/users/${encodeURIComponent(id)}/block`, { method:'POST', body:{ block, reason:'owner dashboard' } }); await load(); } catch(e) { show(e.message, true); } }
+async function deleteUser(id) { if (!confirm('Удалить аккаунт и связанные данные?')) return; try { await req(`owner/users/${encodeURIComponent(id)}/delete`, { method:'POST', body:{ reason:'owner dashboard' } }); await load(); } catch(e) { show(e.message, true); } }
+async function deleteContent(type,id) { if (!confirm('Удалить контент?')) return; try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/delete`, { method:'POST', body:{ reason:'owner dashboard' } }); await load(); } catch(e) { show(e.message, true); } }
+async function restoreContent(type,id) { try { await req(`owner/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}/restore`, { method:'POST', body:{ reason:'owner dashboard' } }); await load(); } catch(e) { show(e.message, true); } }
+async function resolveReport(id) { try { await req(`owner/reports/${encodeURIComponent(id)}/resolve`, { method:'POST', body:{ resolution:'reviewed in owner dashboard' } }); await load(); } catch(e) { show(e.message, true); } }
+async function resetDb() { if (!confirm('Точно сбросить всю базу?')) return; try { await req('owner/reset', { method:'POST' }); await load(); } catch(e) { show(e.message, true); } }
+function downloadJson() { if (!db) return show('Сначала загрузите данные.', true); const blob = new Blob([JSON.stringify(db, null, 2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `blizz-db-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }
+function show(message, danger) { const toast = $('toast'); toast.textContent = message; toast.style.borderColor = danger ? 'hsl(var(--destructive)/.55)' : 'hsl(var(--border))'; toast.classList.add('show'); clearTimeout(show.timer); show.timer = setTimeout(() => toast.classList.remove('show'), 3600); }
+route((location.hash || '#/overview').replace('#/', ''), false);
 if (tokenValue()) load();
 </script>
 </body>

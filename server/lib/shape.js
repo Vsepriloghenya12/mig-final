@@ -13,12 +13,13 @@ function shape(db, viewerId) {
     currentUser: { ...publicUser(viewer, viewer), postsCount: db.posts.filter((p) => p.authorId === viewer.id && p.status !== 'deleted').length },
     users: db.users.filter((u) => u.id !== viewer.id && !hidden.has(u.id)).map((u) => publicUser(u, viewer)),
     posts: db.posts.filter((p) => visibleContent(p, hidden)).sort(newer).map((p) => postShape(p, viewer, usersById, hidden)),
-    stories: activeStories.filter((s) => visibleContent(s, hidden)).sort(newer).map((s) => ({ ...s, author: publicUser(usersById.get(s.authorId) || viewer, viewer) })),
+    stories: activeStories.filter((s) => visibleContent(s, hidden) && canSeeStory(viewer, s)).sort(newer).map((s) => ({ ...s, author: publicUser(usersById.get(s.authorId) || viewer, viewer) })),
     videos: db.videos.filter((v) => visibleContent(v, hidden)).sort(newer).map((v) => videoShape(v, viewer, usersById, hidden)),
     places: db.places.filter((p) => p.status !== 'deleted').sort((a, b) => Number(b.checkins || 0) - Number(a.checkins || 0)),
     collections: db.collections.filter((c) => c.userId === viewer.id)
   };
 }
+function canSeeStory(viewer, story) { return story.authorId === viewer.id || (viewer.following || []).includes(story.authorId); }
 function hiddenUserSet(viewer, users) { const set = new Set(viewer?.blockedUserIds || []); users.filter((u) => u.status && u.status !== 'active').forEach((u) => set.add(u.id)); return set; }
 function visibleContent(item, hidden) { return item.status !== 'deleted' && !hidden.has(item.authorId) && !hidden.has(item.userId); }
 function newer(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); }

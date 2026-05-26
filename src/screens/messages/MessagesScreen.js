@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { chatApi } from '../../api/chat';
 import { Avatar } from '../../components/ui/Avatar';
-import { BrandActionIcon } from '../../components/ui/BrandActionIcon';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Icon } from '../../components/ui/MigIcon';
 import { Text } from '../../components/ui/text';
@@ -12,11 +11,16 @@ import { colors } from '../../theme';
 
 export function MessagesScreen({ api, data, openChat, setActive }) {
   const [dialogs, setDialogs] = useState([]);
-  const { palette } = useTheme();
   const [query, setQuery] = useState('');
-  const users = data?.users || [];
+  const { palette, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const load = useCallback(async () => setDialogs((await chatApi.dialogs(api)).dialogs || []), [api]);
+  const users = data?.users || [];
+  const currentUser = data?.currentUser || {};
+
+  const load = useCallback(async () => {
+    const result = await chatApi.dialogs(api);
+    setDialogs(result.dialogs || []);
+  }, [api]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -25,31 +29,61 @@ export function MessagesScreen({ api, data, openChat, setActive }) {
     openChat(d.dialog.id, user);
   }, [api, openChat]);
 
+  const q = query.trim().toLowerCase();
   const filteredDialogs = useMemo(() => {
-    const q = query.trim().toLowerCase();
     if (!q) return dialogs;
-    return dialogs.filter((dialog) => {
-      const name = `${dialog.user?.name || ''} ${dialog.user?.handle || ''} ${dialog.lastText || ''}`.toLowerCase();
-      return name.includes(q);
-    });
-  }, [dialogs, query]);
+    return dialogs.filter((dialog) => `${dialog.user?.name || ''} ${dialog.user?.handle || ''} ${dialog.lastText || ''}`.toLowerCase().includes(q));
+  }, [dialogs, q]);
 
-  const filteredUsers = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = users.filter((user) => !dialogs.some((dialog) => dialog.user?.id === user.id));
-    if (!q) return list;
-    return list.filter((user) => `${user.name || ''} ${user.handle || ''}`.toLowerCase().includes(q));
-  }, [dialogs, query, users]);
+  const searchUsers = useMemo(() => {
+    if (!q) return [];
+    const dialogUserIds = new Set(dialogs.map((dialog) => dialog.user?.id));
+    return users
+      .filter((user) => user.id !== currentUser?.id)
+      .filter((user) => !dialogUserIds.has(user.id))
+      .filter((user) => `${user.name || ''} ${user.handle || ''}`.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [dialogs, q, users, currentUser?.id]);
 
   const header = (
-    <MessagesHeader palette={palette}
-      insets={insets}
-      query={query}
-      onQuery={setQuery}
-      users={filteredUsers}
-      onBack={() => setActive('feed')}
-      onStart={start}
-    />
+    <View style={[styles.header, { paddingTop: insets.top + 12, backgroundColor: palette.bg }]}> 
+      <View style={styles.topRow}>
+        <Pressable onPress={() => setActive('feed')} hitSlop={12} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Назад">
+          <Icon name="back" size={28} color={palette.ink} />
+        </Pressable>
+        <View style={styles.accountBox}>
+          <Text numberOfLines={1} style={[styles.accountName, { color: palette.ink }]}>{currentUser?.handle || currentUser?.name || 'Сообщения'}</Text>
+          <Icon name="more" size={18} color={palette.ink} />
+        </View>
+        <Pressable onPress={() => setQuery('')} hitSlop={12} style={styles.composeBtn} accessibilityRole="button" accessibilityLabel="Новое сообщение">
+          <Icon name="image" size={31} color={palette.ink} />
+        </Pressable>
+      </View>
+
+      <View style={[styles.searchBox, { backgroundColor: isDark ? '#15151E' : '#F1F1F3' }]}> 
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Поиск"
+          placeholderTextColor={palette.muted}
+          style={[styles.searchInput, { color: palette.ink }]}
+          accessibilityLabel="Поиск сообщений"
+        />
+        {query ? (
+          <Pressable onPress={() => setQuery('')} hitSlop={12} accessibilityRole="button" accessibilityLabel="Очистить поиск">
+            <Icon name="close" size={18} color={palette.muted} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      {searchUsers.length ? (
+        <View style={styles.foundUsersBlock}>
+          {searchUsers.map((user) => (
+            <UserResult key={user.id} user={user} onPress={() => start(user)} />
+          ))}
+        </View>
+      ) : null}
+    </View>
   );
 
   const renderDialog = useCallback(({ item }) => (
@@ -57,140 +91,86 @@ export function MessagesScreen({ api, data, openChat, setActive }) {
   ), [openChat]);
 
   return (
-    <View style={[styles.wrap, { backgroundColor: palette.bg }]}>
+    <View style={[styles.wrap, { backgroundColor: palette.bg }]}> 
       <FlatList
         data={filteredDialogs}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderDialog}
         ListHeaderComponent={header}
-        ListEmptyComponent={<EmptyDialogs hasQuery={!!query.trim()} onClear={() => setQuery('')} />}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 112 }}
+        ListEmptyComponent={<EmptyDialogs hasQuery={!!q} onClear={() => setQuery('')} />}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        initialNumToRender={12}
-        maxToRenderPerBatch={10}
+        initialNumToRender={14}
+        maxToRenderPerBatch={12}
         windowSize={8}
-        removeClippedSubviews
       />
     </View>
   );
 }
 
-function MessagesHeader({ palette, insets, query, onQuery, users, onBack, onStart }) {
+function UserResult({ user, onPress }) {
+  const { palette } = useTheme();
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 10, backgroundColor: palette.bg }]}> 
-      <View style={styles.topRow}>
-        <Pressable onPress={onBack} style={[styles.iconBtn, { backgroundColor: palette.surface, borderColor: palette.line }]} accessibilityRole="button" accessibilityLabel="Назад">
-          <Icon name="back" size={24} color={palette.ink} />
-        </Pressable>
-        <View style={styles.titleBox}>
-          <Text style={styles.title}>Сообщения</Text>
-          <Text style={styles.subtitle}>Чаты и быстрые ответы</Text>
-        </View>
-        <View style={styles.sendIconWrap}>
-          <BrandActionIcon name="share" size={42} />
-        </View>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.userResult, { backgroundColor: pressed ? palette.faint : 'transparent' }]} accessibilityRole="button" accessibilityLabel={`Написать ${user.name || 'пользователю'}`}>
+      <Avatar user={user} size={54} />
+      <View style={styles.dialogText}>
+        <Text numberOfLines={1} style={[styles.dialogName, { color: palette.ink }]}>{user.name || user.handle || 'Пользователь'}</Text>
+        <Text numberOfLines={1} style={[styles.lastText, { color: palette.muted }]}>{user.handle || 'Открыть диалог'}</Text>
       </View>
-
-      <View style={[styles.searchBox, { backgroundColor: palette.faint }]}>
-        <Icon name="comment" size={19} color={colors.muted} />
-        <TextInput
-          value={query}
-          onChangeText={onQuery}
-          placeholder="Поиск"
-          placeholderTextColor={palette.muted}
-          style={[styles.searchInput, { color: palette.ink }]}
-          accessibilityLabel="Поиск сообщений"
-        />
-        {query ? (
-          <Pressable onPress={() => onQuery('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Очистить поиск">
-            <Icon name="close" size={18} color={colors.muted} />
-          </Pressable>
-        ) : null}
-      </View>
-
-      {users.length ? (
-        <View style={styles.peopleBlock}>
-          <View style={styles.sectionLine}>
-            <Text style={styles.sectionTitle}>Новые</Text>
-            <Text style={styles.sectionHint}>написать</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleRow}>
-            {users.slice(0, 12).map((user) => <StoryUser key={user.id} user={user} onPress={() => onStart(user)} />)}
-          </ScrollView>
-        </View>
-      ) : null}
-
-      <View style={styles.sectionLine}>
-        <Text style={styles.sectionTitle}>Сообщения</Text>
-        <Text style={styles.sectionHint}>активные диалоги</Text>
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
-function StoryUser({ user, onPress }) {
-  return (
-    <Pressable onPress={onPress} style={styles.storyUser} accessibilityRole="button" accessibilityLabel={`Написать ${user.name || 'пользователю'}`}>
-      <View style={styles.storyRing}>
-        <Avatar user={user} size={64} />
-      </View>
-      <Text numberOfLines={1} style={styles.storyName}>{user.name || user.handle || 'Близз'}</Text>
-    </Pressable>
-  );
+function formatTime(dialog) {
+  return dialog.timeLabel || dialog.updatedLabel || dialog.lastTimeLabel || '';
 }
 
 function DialogRow({ dialog, onPress }) {
   const { palette } = useTheme();
   const unread = dialog.unread || dialog.unreadCount || 0;
+  const isUnread = unread > 0;
+  const name = dialog.user?.name || dialog.user?.handle || 'Диалог';
+  const last = dialog.lastText || 'Нет сообщений';
+  const time = formatTime(dialog);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.dialogRow, { backgroundColor: palette.bg }, pressed && { backgroundColor: palette.faint }]} accessibilityRole="button" accessibilityLabel={`Открыть диалог ${dialog.user?.name || ''}`}>
-      <Avatar user={dialog.user} size={58} ringColor={unread ? colors.hot : undefined} />
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.dialogRow, { backgroundColor: pressed ? palette.faint : palette.bg }]} accessibilityRole="button" accessibilityLabel={`Открыть диалог ${name}`}>
+      <Avatar user={dialog.user} size={62} />
       <View style={styles.dialogText}>
-        <View style={styles.dialogTop}>
-          <Text numberOfLines={1} style={styles.dialogName}>{dialog.user?.name || dialog.user?.handle || 'Диалог'}</Text>
-          <Text style={styles.dialogTime}>{dialog.timeLabel || 'сейчас'}</Text>
+        <Text numberOfLines={1} style={[styles.dialogName, { color: palette.ink }]}>{name}</Text>
+        <View style={styles.previewRow}>
+          <Text numberOfLines={1} style={[styles.lastText, { color: isUnread ? palette.ink : palette.muted }, isUnread && styles.lastTextUnread]}>{isUnread ? `${unread}+ новых сообщений` : last}</Text>
+          {time ? <Text numberOfLines={1} style={[styles.dialogTime, { color: palette.muted }]}> · {time}</Text> : null}
         </View>
-        <Text numberOfLines={1} style={[styles.lastText, unread && styles.lastTextUnread]}>{dialog.lastText || 'Начните диалог'}</Text>
       </View>
-      {unread ? <View style={styles.unreadDot} /> : <BrandActionIcon name="comment" size={34} />}
+      {isUnread ? <View style={styles.unreadDot} /> : null}
     </Pressable>
   );
 }
 
 function EmptyDialogs({ hasQuery, onClear }) {
-  if (hasQuery) {
-    return <EmptyState title="Ничего не найдено" text="Попробуйте другое имя или handle." action="Сбросить поиск" onPress={onClear} />;
-  }
-  return <EmptyState title="Пока нет диалогов" text="Выберите пользователя в верхнем списке, чтобы начать чат." />;
+  if (hasQuery) return <EmptyState title="Ничего не найдено" action="Очистить поиск" onPress={onClear} />;
+  return <EmptyState title="Пока нет диалогов" />;
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 16, paddingBottom: 8, backgroundColor: colors.bg },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  iconBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line },
-  titleBox: { flex: 1, minWidth: 0 },
-  title: { color: colors.ink, fontSize: 30, fontWeight: '900', letterSpacing: -0.5 },
-  subtitle: { color: colors.muted, fontSize: 13, fontWeight: '700', marginTop: 2 },
-  sendIconWrap: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
-  searchBox: { minHeight: 46, borderRadius: 18, backgroundColor: '#F1EFF8', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 18 },
-  searchInput: { flex: 1, minHeight: 44, color: colors.ink, fontSize: 16, fontWeight: '700' },
-  peopleBlock: { marginBottom: 8 },
-  sectionLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2, marginBottom: 10 },
-  sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '900' },
-  sectionHint: { color: colors.muted, fontSize: 12, fontWeight: '800' },
-  peopleRow: { gap: 14, paddingBottom: 14 },
-  storyUser: { width: 76, alignItems: 'center' },
-  storyRing: { width: 70, height: 70, borderRadius: 35, padding: 3, borderWidth: 2, borderColor: colors.hot, backgroundColor: colors.white },
-  storyName: { color: colors.ink, fontSize: 12, fontWeight: '800', marginTop: 7, maxWidth: 74 },
-  dialogRow: { minHeight: 76, paddingHorizontal: 16, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.bg },
-  pressed: { backgroundColor: '#F5F2FB' },
+  header: { paddingHorizontal: 18, paddingBottom: 8 },
+  topRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  backBtn: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
+  accountBox: { flex: 1, minWidth: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 },
+  accountName: { fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
+  composeBtn: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  searchBox: { minHeight: 42, borderRadius: 14, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  searchInput: { flex: 1, minHeight: 42, fontSize: 15, fontWeight: '800' },
+  foundUsersBlock: { paddingTop: 4, paddingBottom: 8 },
+  userResult: { minHeight: 72, borderRadius: 18, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 13 },
+  dialogRow: { minHeight: 96, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 14 },
   dialogText: { flex: 1, minWidth: 0 },
-  dialogTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dialogName: { color: colors.ink, fontSize: 16, fontWeight: '900', flex: 1 },
-  dialogTime: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  lastText: { color: colors.muted, fontSize: 14, fontWeight: '700', marginTop: 4 },
-  lastTextUnread: { color: colors.ink, fontWeight: '900' },
-  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.hot, marginRight: 10 },
+  dialogName: { fontSize: 17, fontWeight: '900', marginBottom: 4 },
+  previewRow: { flexDirection: 'row', alignItems: 'center', minWidth: 0 },
+  lastText: { flexShrink: 1, fontSize: 15, fontWeight: '800' },
+  lastTextUnread: { fontWeight: '900' },
+  dialogTime: { fontSize: 15, fontWeight: '800' },
+  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#396AFF', marginRight: 4 },
 });
