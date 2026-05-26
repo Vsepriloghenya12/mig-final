@@ -57,6 +57,14 @@
         {
           "color": "#F22D8F"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Близз использует камеру для фото и видео.",
+          "microphonePermission": "Близз использует микрофон для записи видео.",
+          "recordAudioAndroid": true
+        }
       ]
     ]
   }

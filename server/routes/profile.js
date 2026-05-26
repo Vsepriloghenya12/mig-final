@@ -6,9 +6,18 @@ const { shape } = require('../lib/shape');
 const { notifyUser } = require('../lib/push');
 const router = express.Router();
 
+function normalizeHandle(value, fallback) {
+  const raw = clean(value, fallback || '').replace(/^@+/, '').replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 24);
+  return raw ? `@${raw}` : fallback;
+}
+
 router.post('/profile', (req, res) => {
   const db = readDb(); const user = getUser(db, req.body.userId);
-  user.name = clean(req.body.name, user.name); user.bio = clean(req.body.bio, user.bio); user.avatarUrl = clean(req.body.avatarUrl, user.avatarUrl);
+  const nextHandle = normalizeHandle(req.body.handle, user.handle || `@${user.id}`);
+  if (nextHandle && db.users.some((u) => u.id !== user.id && String(u.handle || '').toLowerCase() === nextHandle.toLowerCase())) {
+    return res.status(409).json({ error: 'Этот никнейм уже занят' });
+  }
+  user.name = clean(req.body.name, user.name); user.handle = nextHandle; user.bio = clean(req.body.bio, user.bio); user.avatarUrl = clean(req.body.avatarUrl, user.avatarUrl);
   writeDb(db); res.json(shape(db, user.id));
 });
 

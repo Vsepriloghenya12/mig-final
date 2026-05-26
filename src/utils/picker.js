@@ -67,6 +67,12 @@ export async function pickAvatarAndUpload(api) {
   return pickAndUpload(api, 'image', 'library', { allowsEditing: true, aspect: [1, 1], quality: 0.9, avatar: true });
 }
 
+export async function prepareCameraCapture(asset, type = 'image') {
+  if (!asset?.uri) return null;
+  if (type === 'video') return validateVideo({ ...asset, type: 'video', mimeType: asset.mimeType || 'video/mp4', fileName: asset.fileName || `blizz-${Date.now()}.mp4` });
+  return compressImage({ ...asset, type: 'image', mimeType: asset.mimeType || 'image/jpeg', fileName: asset.fileName || `blizz-${Date.now()}.jpg` });
+}
+
 async function compressImage(asset, avatar = false) {
   if (asset.fileSize && asset.fileSize > MEDIA_LIMITS.imageMaxBytes * 2) {
     Alert.alert('Фото слишком большое', `Выберите фото до ${bytesLabel(MEDIA_LIMITS.imageMaxBytes * 2)}.`);

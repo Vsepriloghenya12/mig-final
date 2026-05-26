@@ -23,16 +23,19 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
   const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState('posts');
   const [name, setName] = useState(user.name || '');
+  const [handle, setHandle] = useState(user.handle || '');
   const [bio, setBio] = useState(user.bio || '');
   const [avatarPreview, setAvatarPreview] = useState('');
   const viewUser = useMemo(() => ({ ...user, avatarUrl: avatarPreview || user.avatarUrl }), [user, avatarPreview]);
   const mine = (data?.posts || []).filter((p) => p.author?.id === user.id);
   const saved = (data?.posts || []).filter((p) => p.saved);
   const tiles = tab === 'saved' ? saved : mine;
+  const cleanHandle = String(handle || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 24);
+  const normalizedHandle = cleanHandle ? `@${cleanHandle}` : viewUser.handle || '';
 
   const save = async (extra = {}) => {
     try {
-      await profileActions.update(api, { name, bio, ...extra });
+      await profileActions.update(api, { name, handle: normalizedHandle, bio, ...extra });
       await reload();
       setEditing(false);
     } catch (e) {
@@ -114,7 +117,7 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
                 <Text style={styles.handle}>{viewUser.handle || '@user'}</Text>
                 {viewUser.bio ? <Text style={styles.bio}>{viewUser.bio}</Text> : null}
                 {!editing ? (
-                  <Button variant="outline" className="mt-3 rounded-full" onPress={() => setEditing(true)} accessibilityLabel="Редактировать профиль">
+                  <Button variant="outline" className="mt-3 rounded-full" onPress={() => { setName(viewUser.name || ''); setHandle(viewUser.handle || ''); setBio(viewUser.bio || ''); setEditing(true); }} accessibilityLabel="Редактировать профиль">
                     <Text>Редактировать профиль</Text>
                   </Button>
                 ) : null}
@@ -130,6 +133,7 @@ export function ProfileScreen({ data, api, reload, setActive, onLogout }) {
             {editing ? (
               <View style={styles.editBox}>
                 <TextField label="Имя" value={name} onChangeText={setName} />
+                <TextField label="Никнейм" value={handle} onChangeText={setHandle} placeholder="@nickname" />
                 <TextField label="О себе" value={bio} onChangeText={setBio} multiline />
                 <View style={styles.editActions}>
                   <Button variant="outline" className="flex-1 rounded-full" onPress={() => setEditing(false)} accessibilityLabel="Отменить редактирование">
