@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { assets } from '../assets';
@@ -11,16 +11,52 @@ function cleanPhone(value) {
   return String(value || '').replace(/[^0-9]/g, '');
 }
 
+function cleanHandle(value) {
+  const raw = String(value || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
+  return raw ? `@${raw}` : '';
+}
+
 export function LoginScreen({ onSave }) {
   const { palette, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
+  const [handle, setHandle] = useState('');
   const [phone, setPhone] = useState('');
-  const canLogin = name.trim().length >= 2 && cleanPhone(phone).length >= 6;
-  const submit = () => {
-    if (!canLogin) return;
-    onSave({ name: name.trim(), phone: phone.trim() });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const phoneOk = cleanPhone(phone).length >= 6;
+  const handleValue = useMemo(() => cleanHandle(handle), [handle]);
+  const canLogin = phoneOk;
+  const canRegister = phoneOk && name.trim().length >= 2 && handleValue.length >= 3;
+
+  const setNextMode = (next) => {
+    setError('');
+    setMode(next);
   };
+
+  const submit = async () => {
+    const isRegister = mode === 'register';
+    const allowed = isRegister ? canRegister : canLogin;
+    setError('');
+    if (!allowed || busy) return;
+    setBusy(true);
+    try {
+      await onSave({
+        mode,
+        phone: phone.trim(),
+        name: isRegister ? name.trim() : '',
+        handle: isRegister ? handleValue : '',
+      });
+    } catch (e) {
+      setError(e?.message || 'Не удалось войти');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const disabled = mode === 'register' ? !canRegister || busy : !canLogin || busy;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.wrap, { backgroundColor: palette.bg }]}> 
@@ -28,12 +64,13 @@ export function LoginScreen({ onSave }) {
       <View style={[styles.blobA, { backgroundColor: isDark ? 'rgba(242,45,143,.16)' : 'rgba(242,45,143,.11)' }]} />
       <View style={[styles.blobB, { backgroundColor: isDark ? 'rgba(47,123,255,.14)' : 'rgba(47,123,255,.10)' }]} />
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 28 }]} showsVerticalScrollIndicator={false}>
-        <Image source={assets.fullLogo} style={styles.logo} resizeMode="contain" />
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 26, paddingBottom: insets.bottom + 28 }]} showsVerticalScrollIndicator={false}>
+        <View style={styles.hero}>
+          <Text style={[styles.welcome, { color: palette.ink }]}>Добро пожаловать в</Text>
+          <Image source={assets.fullLogo} style={styles.logo} resizeMode="contain" />
+        </View>
 
         <View style={[styles.sheet, { backgroundColor: isDark ? '#101018' : '#FFFFFF', borderColor: palette.line }]}> 
-          <Text style={[styles.title, { color: palette.ink }]}>Вход</Text>
-
           <View style={styles.form}>
             <View style={styles.fieldBlock}>
               <Text style={[styles.label, { color: palette.muted }]}>Телефон</Text>
@@ -48,29 +85,59 @@ export function LoginScreen({ onSave }) {
                 className="rounded-[22px]"
               />
             </View>
-            <View style={styles.fieldBlock}>
-              <Text style={[styles.label, { color: palette.muted }]}>Имя</Text>
-              <Input
-                value={name}
-                onChangeText={setName}
-                placeholder="Ваше имя"
-                textContentType="name"
-                autoComplete="name"
-                accessibilityLabel="Имя профиля"
-                className="rounded-[22px]"
-              />
-            </View>
-          </View>
 
+            {mode === 'register' ? (
+              <>
+                <View style={styles.fieldBlock}>
+                  <Text style={[styles.label, { color: palette.muted }]}>Имя</Text>
+                  <Input
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Ваше имя"
+                    textContentType="name"
+                    autoComplete="name"
+                    accessibilityLabel="Имя профиля"
+                    className="rounded-[22px]"
+                  />
+                </View>
+                <View style={styles.fieldBlock}>
+                  <Text style={[styles.label, { color: palette.muted }]}>Никнейм</Text>
+                  <Input
+                    value={handle}
+                    onChangeText={setHandle}
+                    placeholder="nickname"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    accessibilityLabel="Никнейм профиля"
+                    className="rounded-[22px]"
+                  />
+                </View>
+              </>
+            ) : null}
+          </View>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </View>
+
+        <View style={styles.modeActions}>
           <Pressable
-            onPress={submit}
-            disabled={!canLogin}
-            style={({ pressed }) => [styles.submit, !canLogin && styles.submitDisabled, pressed && canLogin && styles.submitPressed]}
+            onPress={() => mode === 'login' ? submit() : setNextMode('login')}
+            disabled={mode === 'login' && disabled}
+            style={({ pressed }) => [styles.modeSelect, mode === 'login' && styles.modeSelectActive, mode === 'login' && disabled && styles.disabled, pressed && styles.pressed]}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !canLogin }}
+            accessibilityState={{ disabled: mode === 'login' && disabled, selected: mode === 'login' }}
             accessibilityLabel="Войти"
           >
-            <RNText style={styles.submitText}>Войти</RNText>
+            <RNText style={[styles.modeSelectText, mode === 'login' && styles.modeSelectTextActive]}>Войти</RNText>
+          </Pressable>
+          <Pressable
+            onPress={() => mode === 'register' ? submit() : setNextMode('register')}
+            disabled={mode === 'register' && disabled}
+            style={({ pressed }) => [styles.modeSelect, mode === 'register' && styles.modeSelectActive, mode === 'register' && disabled && styles.disabled, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: mode === 'register' && disabled, selected: mode === 'register' }}
+            accessibilityLabel="Зарегистрироваться"
+          >
+            <RNText style={[styles.modeSelectText, mode === 'register' && styles.modeSelectTextActive]}>Зарегистрироваться</RNText>
           </Pressable>
         </View>
       </ScrollView>
@@ -81,17 +148,22 @@ export function LoginScreen({ onSave }) {
 const styles = StyleSheet.create({
   wrap: { flex: 1 },
   statusOverlay: { position: 'absolute', top: 0, left: 0, right: 0 },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20 },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22 },
   blobA: { position: 'absolute', width: 250, height: 250, borderRadius: 125, left: -120, top: 70 },
   blobB: { position: 'absolute', width: 270, height: 270, borderRadius: 135, right: -105, bottom: 72 },
-  logo: { alignSelf: 'center', width: 230, height: 104, marginBottom: 22 },
-  sheet: { borderWidth: 1, borderRadius: 34, paddingHorizontal: 22, paddingTop: 26, paddingBottom: 24, ...shadow },
-  title: { fontSize: 32, fontWeight: '900', letterSpacing: -0.6, marginBottom: 20 },
-  form: { gap: 14 },
+  hero: { alignItems: 'center', marginBottom: 22 },
+  welcome: { textAlign: 'center', fontSize: 24, lineHeight: 30, fontWeight: '900', letterSpacing: -0.35, marginBottom: 6 },
+  logo: { alignSelf: 'center', width: 232, height: 92 },
+  sheet: { borderWidth: 1, borderRadius: 34, paddingHorizontal: 22, paddingTop: 22, paddingBottom: 24, ...shadow },
+  form: { gap: 15 },
   fieldBlock: { gap: 8 },
   label: { paddingHorizontal: 3, fontSize: 13, fontWeight: '900' },
-  submit: { marginTop: 22, minHeight: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.hot, shadowColor: colors.hot, shadowOpacity: 0.28, shadowRadius: 18, shadowOffset: { width: 0, height: 9 }, elevation: 4 },
-  submitDisabled: { opacity: 0.62, shadowOpacity: 0 },
-  submitPressed: { transform: [{ scale: 0.985 }] },
-  submitText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
+  error: { marginTop: 14, color: '#D64265', fontSize: 13, fontWeight: '900' },
+  modeActions: { gap: 10, marginTop: 18 },
+  modeSelect: { width: '100%', minHeight: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.88)', borderWidth: 1, borderColor: 'rgba(230,225,241,.92)' },
+  modeSelectActive: { backgroundColor: '#F22D8F', borderColor: '#F22D8F', shadowColor: '#F22D8F', shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  modeSelectText: { color: '#2A2740', fontSize: 16, fontWeight: '900' },
+  modeSelectTextActive: { color: '#FFFFFF' },
+  disabled: { opacity: 0.58, shadowOpacity: 0 },
+  pressed: { transform: [{ scale: 0.985 }] },
 });

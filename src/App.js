@@ -3,6 +3,7 @@ import { ActivityIndicator, BackHandler, StatusBar, StyleSheet, Text, View } fro
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PortalHost } from '@rn-primitives/portal';
 import { BottomNav } from './components/BottomNav';
+import { UserSearchSheet } from './components/UserSearchSheet';
 import { useIdentity } from './hooks/useIdentity';
 import { useMigData } from './hooks/useMigData';
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -27,6 +28,7 @@ function AppShell() {
   const [chat, setChat] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [navHidden, setNavHidden] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -49,27 +51,28 @@ function AppShell() {
     setChat(null);
     setProfileUser(null);
     setActive('feed');
+    setSearchOpen(false);
     setData(null);
     await clear();
   };
 
-  const openChat = (id, user) => { setChat({ id, user }); setActive('chat'); };
-  const openUser = (user) => { if (user?.id && user.id !== identity.id) { setProfileUser(user); setActive('userProfile'); } };
+  const openChat = (id, user) => { setSearchOpen(false); setChat({ id, user }); setActive('chat'); };
+  const openUser = (user) => { if (user?.id && user.id !== identity.id) { setSearchOpen(false); setProfileUser(user); setActive('userProfile'); } };
   const openTab = (next) => {
     setNavHidden(false);
     if (next !== 'userProfile') setProfileUser(null);
     if (next !== 'chat') setChat((current) => next === 'messages' ? current : null);
     setActive(next);
   };
-  const common = { data, setData, api, loading, reload, setActive: openTab, setNavHidden, currentUserId: identity.id };
+  const common = { data, setData, api, loading, reload, setActive: openTab, setNavHidden, currentUserId: identity.id, openChat };
 
   let body;
   if (active === 'messages') body = <MessagesScreen {...common} openChat={openChat} />;
   else if (active === 'chat') body = <ChatScreen api={api} dialogId={chat?.id} user={chat?.user} currentUserId={identity.id} onBack={() => setActive('messages')} />;
   else if (active === 'userProfile') body = <UserProfileScreen {...common} user={profileUser} onBack={() => setActive('feed')} openChat={openChat} />;
   else {
-    let screen = <FeedScreen {...common} onOpenProfile={openUser} />;
-    if (active === 'video') screen = <VideoScreen {...common} />;
+    let screen = <FeedScreen {...common} onOpenProfile={openUser} onSearch={() => setSearchOpen(true)} />;
+    if (active === 'video') screen = <VideoScreen {...common} onOpenProfile={openUser} />;
     if (active === 'create') screen = <CreateScreen {...common} initial="story" />;
     if (active === 'createStory') screen = <CreateScreen {...common} initial="story" />;
     if (active === 'createVideo') screen = <CreateScreen {...common} initial="video" />;
@@ -83,6 +86,7 @@ function AppShell() {
     <SafeAreaProvider>
       <StatusBar translucent={false} backgroundColor={isDark ? '#14141A' : palette.bg} barStyle={isDark ? 'light-content' : 'dark-content'} />
       {body}
+      <UserSearchSheet visible={searchOpen} users={data?.users || []} currentUserId={identity.id} api={api} onClose={() => setSearchOpen(false)} onOpenProfile={openUser} onOpenChat={openChat} />
       <PortalHost />
     </SafeAreaProvider>
   );

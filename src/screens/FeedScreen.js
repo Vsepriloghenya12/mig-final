@@ -27,7 +27,7 @@ function getFollowingIds(user = {}) {
   return new Set(raw.map((item) => String(item?.id || item)).filter(Boolean));
 }
 
-export function FeedScreen({ data, setData, api, loading, reload, setActive, setNavHidden, onOpenProfile }) {
+export function FeedScreen({ data, setData, api, loading, reload, setActive, setNavHidden, onOpenProfile, onSearch }) {
   const [commentPost, setCommentPost] = useState(null);
   const [story, setStory] = useState(null);
   const [feedMode, setFeedMode] = useState('users');
@@ -100,7 +100,7 @@ export function FeedScreen({ data, setData, api, loading, reload, setActive, set
   ), [api, onOpenProfile, reload, setData]);
 
   return <View style={[styles.wrap, { backgroundColor: palette.bg }]}>
-    <Header onMessages={() => setActive('messages')} scrollY={scrollY} />
+    <Header onMessages={() => setActive('messages')} onSearch={onSearch} scrollY={scrollY} />
     {storiesOverlay}
     <Animated.FlatList
       data={visiblePosts}

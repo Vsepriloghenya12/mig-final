@@ -12,7 +12,7 @@ export const Text = React.forwardRef(function Text({ className, style, ...props 
     <RNText
       ref={ref}
       className={cn('text-base text-foreground', textClassName, className)}
-      style={[style, isDark && { color: palette.ink }]}
+      style={[isDark && { color: palette.ink }, style]}
       {...props}
     />
   );

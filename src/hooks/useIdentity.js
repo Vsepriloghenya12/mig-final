@@ -15,13 +15,16 @@ function phoneHash(phone) {
   return Math.abs(hash >>> 0).toString(36);
 }
 
-function buildIdentity({ name, phone }) {
+function buildIdentity({ name, phone, handle, mode }) {
   const phoneDigits = normalizePhone(phone);
   const id = phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`;
+  const cleanHandle = String(handle || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
   return {
     id,
-    name: String(name || '').trim() || 'Пользователь',
+    mode: mode === 'register' ? 'register' : 'login',
+    name: String(name || '').trim(),
     phone: phoneDigits,
+    handle: cleanHandle ? `@${cleanHandle}` : '',
   };
 }
 
@@ -52,7 +55,7 @@ export function useIdentity() {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) throw new Error(data?.error || 'Не удалось войти');
-    const saved = data?.user ? { ...next, ...data.user, phone: next.phone } : next;
+    const saved = data?.user ? { ...next, ...data.user, phone: next.phone, mode: undefined } : { ...next, mode: undefined };
     await AsyncStorage.multiSet([[KEY, JSON.stringify(saved)]]);
     setIdentity(saved);
   };

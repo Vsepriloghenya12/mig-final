@@ -1,6 +1,7 @@
 export const chatApi = {
   dialogs: (api) => api.get('/api/dialogs'),
   openDialog: (api, targetId) => api.post('/api/dialogs', { targetId }),
+  createGroup: (api, participantIds, title = '') => api.post('/api/dialogs/group', { participantIds, title }),
   messages: (api, dialogId) => api.get(`/api/dialogs/${dialogId}/messages`),
   sendText: (api, dialogId, text) => api.post(`/api/dialogs/${dialogId}/messages`, { type: 'text', text }),
   sendMedia: (api, dialogId, media) => api.post(`/api/dialogs/${dialogId}/messages`, { type: media.mediaType, mediaUrl: media.url }),

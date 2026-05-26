@@ -15,7 +15,7 @@ import { useTheme } from '../theme-context';
 import { colors, shadow } from '../theme';
 import { blockUser, reportContent } from '../utils/moderation';
 
-export function VideoScreen({ data, setData, api, reload, setActive }) {
+export function VideoScreen({ data, setData, api, reload, setActive, onOpenProfile }) {
   const [commentVideo, setCommentVideo] = useState(null);
   const { palette } = useTheme();
   const [activeId, setActiveId] = useState(null);
@@ -42,8 +42,9 @@ export function VideoScreen({ data, setData, api, reload, setActive }) {
       onComment={() => setCommentVideo(item)}
       onReport={() => reportContent(api, { targetType: 'video', targetId: item.id, targetUserId: item.author?.id })}
       onBlock={() => blockUser(api, item.author?.id, reload)}
+      onOpenProfile={() => onOpenProfile?.(item.author)}
     />
-  ), [activeId, api, appActive, height, insets.bottom, reload]);
+  ), [activeId, api, appActive, height, insets.bottom, onOpenProfile, reload]);
 
   const getItemLayout = useCallback((_, index) => ({ length: height, offset: height * index, index }), [height]);
 
@@ -80,7 +81,7 @@ export function VideoScreen({ data, setData, api, reload, setActive }) {
   );
 }
 
-const VideoItem = memo(function VideoItem({ video, active, height, bottomOffset, onLike, onComment, onReport, onBlock }) {
+const VideoItem = memo(function VideoItem({ video, active, height, bottomOffset, onLike, onComment, onReport, onBlock, onOpenProfile }) {
   const [menu, setMenu] = useState(false);
   const share = () => Share.share({ message: `${video.author?.name || 'Близз'}: ${video.caption || 'Короткое видео в Близз'}` });
   const closeThen = (fn) => { setMenu(false); fn?.(); };
@@ -89,13 +90,13 @@ const VideoItem = memo(function VideoItem({ video, active, height, bottomOffset,
       <MediaView item={video} style={styles.media} shouldPlay={active} muted={false} />
       <View style={styles.dark} />
       <View style={[styles.infoPanel, { bottom: bottomOffset + 116 }]}> 
-        <View style={styles.authorRow}>
+        <Pressable onPress={onOpenProfile} style={styles.authorRow} accessibilityRole="button" accessibilityLabel="Открыть профиль автора">
           <Avatar user={video.author} size={38} />
           <View style={styles.authorText}>
             <Text numberOfLines={1} style={styles.authorName}>{video.author?.handle || video.author?.name || 'Близз'}</Text>
             {video.location ? <Text numberOfLines={1} style={styles.location}>{video.location}</Text> : null}
           </View>
-        </View>
+        </Pressable>
         {video.caption ? <Text numberOfLines={3} style={styles.caption}>{video.caption}</Text> : null}
       </View>
       <View style={[styles.side, { bottom: bottomOffset + 126 }]}> 

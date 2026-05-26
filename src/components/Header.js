@@ -10,7 +10,7 @@ export const HEADER_EXPANDED_HEIGHT = 82;
 export const HEADER_COLLAPSED_HEIGHT = 0;
 const COLLAPSE_DISTANCE = 92;
 
-export function Header({ onMessages, scrollY }) {
+export function Header({ onMessages, onSearch, scrollY }) {
   const insets = useSafeAreaInsets();
   const { palette, isDark, toggleTheme } = useTheme();
   const value = scrollY || new Animated.Value(0);
@@ -47,6 +47,15 @@ export function Header({ onMessages, scrollY }) {
           <Image source={isDark ? assets.headerLogoDark : assets.headerLogo} style={styles.logo} resizeMode="contain" accessible={false} />
         </View>
         <View style={styles.actions}>
+          <Pressable
+            onPress={onSearch}
+            hitSlop={12}
+            style={[styles.button, styles.searchButton, { backgroundColor: isDark ? '#111119' : palette.white, borderColor: palette.line }]}
+            accessibilityRole="button"
+            accessibilityLabel="Поиск пользователей"
+          >
+            <Image source={assets.searchIcon} style={styles.searchIcon} resizeMode="contain" />
+          </Pressable>
           <Pressable
             onPress={toggleTheme}
             hitSlop={12}
@@ -95,7 +104,9 @@ const styles = StyleSheet.create({
   logo: { width: 146, height: 46 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   button: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
+  searchButton: { overflow: 'hidden' },
   themeButton: { overflow: 'hidden' },
   messageButton: { backgroundColor: colors.white, borderColor: colors.white },
+  searchIcon: { width: 39, height: 39 },
   themeIcon: { width: 42, height: 42 },
 });

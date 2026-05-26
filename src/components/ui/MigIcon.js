@@ -43,6 +43,7 @@ export function Icon({ name, size = 24, active, color }) {
   if (name === 'near') return <BrandAsset source={nearIcon} size={size + 3} active={!!active} dimWhenInactive={!color} />;
   if (name === 'profile') return <BrandAsset source={profileIcon} size={size + 3} active={!!active} />;
   if (name === 'mail') return <BrandAsset source={active ? assets.mailActive : assets.mailInactive} size={size + 6} active={!!active} dimWhenInactive={false} />;
+  if (name === 'search') return <BrandAsset source={assets.searchIcon} size={size + 7} active={!!active} dimWhenInactive={false} />;
   if (name === 'send' || name === 'share') return <BrandAsset source={assets.shareBrand} size={size + 2} active={!!active} dimWhenInactive={false} />;
   if (name === 'save' || name === 'collections') return <BrandAsset source={active ? assets.saveActive : assets.saveInactive} size={size + 3} active={!!active} dimWhenInactive={false} />;
   if (name === 'image') return <BrandAsset source={feedIcon} size={size + 3} active={!!active} dimWhenInactive={false} />;

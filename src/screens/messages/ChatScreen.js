@@ -82,10 +82,10 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
         <Pressable onPress={onBack} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Назад">
           <Icon name="back" size={25} color={palette.ink} />
         </Pressable>
-        <Avatar user={user} size={44} />
+        {user?.isGroup ? <GroupAvatar users={user.users || []} /> : <Avatar user={user} size={44} />}
         <View style={styles.headTitleBox}>
           <Text numberOfLines={1} style={styles.headTitle}>{user?.name || 'Диалог'}</Text>
-          <Text numberOfLines={1} style={styles.headSubtitle}>{user?.handle || 'в Близз'}</Text>
+          <Text numberOfLines={1} style={styles.headSubtitle}>{user?.isGroup ? user.handle : (user?.handle || 'в Близз')}</Text>
         </View>
         <Pressable onPress={() => setProfileMenu(true)} style={[styles.headBtn, { backgroundColor: palette.surface }]} accessibilityRole="button" accessibilityLabel="Действия с диалогом">
           <Icon name="more" size={20} color={palette.ink} />
@@ -143,10 +143,25 @@ export function ChatScreen({ api, dialogId, user, currentUserId, onBack }) {
   );
 }
 
+function GroupAvatar({ users = [] }) {
+  const list = users.slice(0, 3);
+  return (
+    <View style={styles.groupAvatarWrap}>
+      {list.map((u, i) => (
+        <View key={u.id || i} style={[styles.groupAvatarItem, { left: i * 12, zIndex: 4 - i }]}>
+          <Avatar user={u} size={34} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
   head: { paddingHorizontal: 14, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 11, backgroundColor: 'rgba(255,255,255,.96)', borderBottomWidth: 1, borderColor: colors.line, ...shadow },
   headBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.faint, alignItems: 'center', justifyContent: 'center' },
+  groupAvatarWrap: { width: 62, height: 42, position: 'relative' },
+  groupAvatarItem: { position: 'absolute', top: 4, borderRadius: 18, borderWidth: 2, borderColor: colors.white, overflow: 'hidden' },
   headTitleBox: { flex: 1, minWidth: 0 },
   headTitle: { color: colors.ink, fontSize: 18, fontWeight: '900' },
   headSubtitle: { color: colors.muted, fontSize: 12, fontWeight: '800', marginTop: 2 },
