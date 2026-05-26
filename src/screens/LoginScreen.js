@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -11,14 +10,34 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { ArrowRight, Eye, EyeOff, Lock, Phone, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowRight, Eye, EyeOff, Lock, Phone, Send, UserRound } from 'lucide-react-native';
 import { assets } from '../assets';
-import { useTheme } from '../theme-context';
 import { Text } from '../components/ui/text';
 
+const palette = {
+  bg: '#070A13',
+  bg2: '#0C1020',
+  card: 'rgba(255,255,255,0.082)',
+  cardLine: 'rgba(255,255,255,0.12)',
+  field: 'rgba(3,7,18,0.34)',
+  fieldFocus: 'rgba(3,7,18,0.44)',
+  text: '#FFFFFF',
+  textSoft: 'rgba(255,255,255,0.66)',
+  textFaint: 'rgba(255,255,255,0.36)',
+  brand: '#F22D8F',
+  brand2: '#2F7BFF',
+  active: '#FFFFFF',
+  activeText: '#111827',
+  error: '#FF8EA8',
+};
+
+function onlyDigits(value) {
+  return String(value || '').replace(/[^0-9]/g, '');
+}
+
 function isPhoneValid(phone) {
-  return String(phone || '').replace(/[^0-9]/g, '').length >= 10;
+  return onlyDigits(phone).length >= 10;
 }
 
 function isLoginValid({ phone, password }) {
@@ -36,16 +55,14 @@ function isRegisterValid({ phone, firstName, lastName, nickname, password }) {
 }
 
 function normalizeHandle(value) {
-  const raw = String(value || '')
+  return String(value || '')
     .trim()
     .replace(/^@+/, '')
     .replace(/[^a-zA-Z0-9._]/g, '')
     .slice(0, 28);
-  return raw ? `@${raw}` : '';
 }
 
 export function LoginScreen({ onSave }) {
-  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -62,194 +79,191 @@ export function LoginScreen({ onSave }) {
     return isRegisterValid({ phone, firstName, lastName, nickname, password });
   }, [mode, phone, password, firstName, lastName, nickname]);
 
-  const palette = isDark ? darkPalette : lightPalette;
-
-  const handleSubmit = async () => {
+  const submit = async () => {
     setError('');
     if (!canSubmit) {
-      setError(mode === 'login' ? 'Введите телефон и пароль.' : 'Заполните все поля регистрации.');
+      setError(mode === 'login' ? 'Введите телефон и пароль.' : 'Заполните все поля. Пароль — минимум 6 символов.');
       return;
     }
     setBusy(true);
     try {
+      const cleanNickname = normalizeHandle(nickname);
       await onSave({
         mode,
         phone,
         password,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-        handle: normalizeHandle(nickname),
+        firstName: mode === 'register' ? firstName.trim() : '',
+        lastName: mode === 'register' ? lastName.trim() : '',
+        name: mode === 'register' ? `${firstName.trim()} ${lastName.trim()}`.trim() : '',
+        handle: mode === 'register' ? cleanNickname : '',
       });
     } catch (e) {
-      setError(e?.message || (mode === 'login' ? 'Не удалось войти' : 'Не удалось создать аккаунт'));
+      setError(e?.message || (mode === 'login' ? 'Не удалось войти.' : 'Не удалось создать аккаунт.'));
     } finally {
       setBusy(false);
     }
   };
 
-  const switchMode = (next) => {
-    setMode(next);
+  const switchMode = (nextMode) => {
+    setMode(nextMode);
     setError('');
   };
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: palette.bg }]}> 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <View style={[styles.glowTop, { backgroundColor: palette.glowCyan }]} />
-          <View style={[styles.glowBottom, { backgroundColor: palette.glowPink }]} />
-          <View style={[styles.glowCenter, { backgroundColor: palette.glowBlue }]} />
+    <SafeAreaView style={styles.screen}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboard}>
+        <View pointerEvents="none" style={styles.glowLayer}>
+          <View style={[styles.glow, styles.glowCyan]} />
+          <View style={[styles.glow, styles.glowPink]} />
+          <View style={[styles.glow, styles.glowBlue]} />
         </View>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scroll, { paddingTop: Math.max(insets.top + 22, 36), paddingBottom: insets.bottom + 30 }]}
+          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + 26, 42), paddingBottom: insets.bottom + 28 }]}
         >
-          <View style={styles.logoBlock}>
-            <Text style={[styles.welcome, { color: palette.text }]}>Добро пожаловать в</Text>
-            <Image source={assets.fullLogo} resizeMode="contain" style={styles.logo} />
-          </View>
-
-          <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.cardBorder, shadowColor: palette.shadow }]}> 
-            <View style={[styles.tabs, { backgroundColor: palette.tabsBg, borderColor: palette.border }]}> 
-              <TabButton title="Войти" active={mode === 'login'} palette={palette} onPress={() => switchMode('login')} />
-              <TabButton title="Зарегистрироваться" active={mode === 'register'} palette={palette} onPress={() => switchMode('register')} />
+          <View style={styles.card}>
+            <View style={styles.tabs}>
+              <TabButton title="Войти" active={mode === 'login'} onPress={() => switchMode('login')} />
+              <TabButton title="Зарегистрироваться" active={mode === 'register'} onPress={() => switchMode('register')} />
             </View>
 
-            <View style={styles.form}> 
-              {mode === 'login' ? (
-                <>
-                  <PhoneField value={phone} onChange={setPhone} palette={palette} />
-                  <PasswordField value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} palette={palette} />
-                </>
-              ) : (
-                <>
-                  <PhoneField value={phone} onChange={setPhone} palette={palette} />
-                  <Field label="Имя" icon={<UserRound size={21} color={palette.icon} strokeWidth={2.2} />} palette={palette}>
-                    <TextInput
-                      value={firstName}
-                      onChangeText={setFirstName}
-                      placeholder="Введите имя"
-                      placeholderTextColor={palette.placeholder}
-                      style={[styles.input, { color: palette.text }]}
-                      returnKeyType="next"
-                    />
-                  </Field>
-                  <Field label="Фамилия" icon={<UserRound size={21} color={palette.icon} strokeWidth={2.2} />} palette={palette}>
-                    <TextInput
-                      value={lastName}
-                      onChangeText={setLastName}
-                      placeholder="Введите фамилию"
-                      placeholderTextColor={palette.placeholder}
-                      style={[styles.input, { color: palette.text }]}
-                      returnKeyType="next"
-                    />
-                  </Field>
-                  <Field label="Никнейм" icon={<UserRound size={21} color={palette.icon} strokeWidth={2.2} />} palette={palette}>
-                    <TextInput
-                      value={nickname}
-                      onChangeText={setNickname}
-                      placeholder="Введите никнейм"
-                      placeholderTextColor={palette.placeholder}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      style={[styles.input, { color: palette.text }]}
-                      returnKeyType="next"
-                    />
-                  </Field>
-                  <PasswordField value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} palette={palette} placeholder="Минимум 6 символов" />
-                </>
-              )}
+            <View style={styles.form}>
+              <View style={styles.fieldsWrap}>
+                <PhoneField value={phone} onChange={setPhone} />
+
+                {mode === 'register' ? (
+                  <>
+                    <Field label="Имя" icon={<UserRound size={20} color={palette.textFaint} strokeWidth={2.2} />}>
+                      <TextInput
+                        value={firstName}
+                        onChangeText={setFirstName}
+                        placeholder="Введите имя"
+                        placeholderTextColor={palette.textFaint}
+                        style={styles.input}
+                        returnKeyType="next"
+                      />
+                    </Field>
+
+                    <Field label="Фамилия" icon={<UserRound size={20} color={palette.textFaint} strokeWidth={2.2} />}>
+                      <TextInput
+                        value={lastName}
+                        onChangeText={setLastName}
+                        placeholder="Введите фамилию"
+                        placeholderTextColor={palette.textFaint}
+                        style={styles.input}
+                        returnKeyType="next"
+                      />
+                    </Field>
+
+                    <Field label="Никнейм" icon={<UserRound size={20} color={palette.textFaint} strokeWidth={2.2} />}>
+                      <TextInput
+                        value={nickname}
+                        onChangeText={setNickname}
+                        placeholder="Введите никнейм"
+                        placeholderTextColor={palette.textFaint}
+                        style={styles.input}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        returnKeyType="next"
+                      />
+                    </Field>
+                  </>
+                ) : null}
+
+                <PasswordField
+                  value={password}
+                  onChange={setPassword}
+                  show={showPassword}
+                  onToggle={() => setShowPassword((value) => !value)}
+                  placeholder={mode === 'login' ? 'Введите пароль' : 'Минимум 6 символов'}
+                  onSubmit={submit}
+                />
+              </View>
+
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+
+              <Pressable
+                onPress={submit}
+                disabled={busy || !canSubmit}
+                style={({ pressed }) => [styles.submit, (busy || !canSubmit) && styles.submitDisabled, pressed && canSubmit ? styles.submitPressed : null]}
+              >
+                <Text style={styles.submitText}>{busy ? 'Подождите...' : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</Text>
+                <ArrowRight size={20} color={palette.activeText} strokeWidth={2.4} />
+              </Pressable>
             </View>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <Pressable
-              onPress={handleSubmit}
-              disabled={!canSubmit || busy}
-              style={({ pressed }) => [
-                styles.submit,
-                { backgroundColor: palette.submit, opacity: !canSubmit || busy ? 0.45 : pressed ? 0.86 : 1 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
-            >
-              <Text style={[styles.submitText, { color: palette.submitText }]}>{busy ? 'Подождите...' : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</Text>
-              <ArrowRight size={21} color={palette.submitText} strokeWidth={2.6} />
-            </Pressable>
 
             <View style={styles.dividerRow}>
-              <View style={[styles.divider, { backgroundColor: palette.border }]} />
-              <Text style={[styles.or, { color: palette.dim }]}>или</Text>
-              <View style={[styles.divider, { backgroundColor: palette.border }]} />
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>или</Text>
+              <View style={styles.divider} />
             </View>
 
-            <View style={styles.socialGrid}>
-              <SocialButton label="Google" palette={palette}><Text style={styles.google}>G</Text></SocialButton>
-              <SocialButton label="Яндекс" palette={palette}><Text style={styles.yandex}>Я</Text></SocialButton>
-              <SocialButton label="Telegram" palette={palette}><Send size={26} color="#27A7E7" fill="#27A7E7" strokeWidth={1.8} /></SocialButton>
-              <SocialButton label="Apple ID" palette={palette}><Text style={[styles.apple, { color: palette.text }]}></Text></SocialButton>
+            <View style={styles.socialRow}>
+              <SocialButton label="G" color="#4285F4" />
+              <SocialButton label="Я" color="#FC3F1D" />
+              <SocialButton label="✈" color="#26A5E4" />
+              <SocialButton label="" color="#FFFFFF" />
             </View>
           </View>
 
-          <Text style={[styles.terms, { color: palette.dim }]}>Продолжая, вы соглашаетесь с условиями сервиса и политикой конфиденциальности.</Text>
+          <Text style={styles.terms}>Продолжая, вы соглашаетесь с условиями сервиса и политикой конфиденциальности.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function TabButton({ title, active, palette, onPress }) {
+function TabButton({ title, active, onPress }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.tab, active ? { backgroundColor: palette.activeTab } : null, pressed && !active ? { backgroundColor: palette.tabPressed } : null]} accessibilityRole="button">
-      <Text style={[styles.tabText, { color: active ? palette.activeTabText : palette.inactiveTabText }]}>{title}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && !active ? styles.tabPressed : null]}>
+      <Text style={[styles.tabText, active && styles.tabTextActive]}>{title}</Text>
     </Pressable>
   );
 }
 
-function PhoneField({ value, onChange, palette }) {
+function PhoneField({ value, onChange }) {
   return (
-    <Field label="Номер телефона" icon={<Phone size={21} color={palette.icon} strokeWidth={2.2} />} palette={palette}>
+    <Field label="Номер телефона" icon={<Phone size={20} color={palette.textFaint} strokeWidth={2.2} />}>
       <TextInput
         value={value}
         onChangeText={onChange}
         keyboardType="phone-pad"
-        inputMode="tel"
         placeholder="+7 999 000-00-00"
-        placeholderTextColor={palette.placeholder}
-        style={[styles.input, { color: palette.text }]}
+        placeholderTextColor={palette.textFaint}
+        style={styles.input}
         returnKeyType="next"
       />
     </Field>
   );
 }
 
-function PasswordField({ value, onChange, show, onToggle, palette, placeholder = 'Введите пароль' }) {
+function PasswordField({ value, onChange, show, onToggle, placeholder, onSubmit }) {
   return (
-    <Field label="Пароль" icon={<Lock size={21} color={palette.icon} strokeWidth={2.2} />} palette={palette}>
+    <Field label="Пароль" icon={<Lock size={20} color={palette.textFaint} strokeWidth={2.2} />}>
       <TextInput
         value={value}
         onChangeText={onChange}
         secureTextEntry={!show}
         placeholder={placeholder}
-        placeholderTextColor={palette.placeholder}
-        style={[styles.input, { color: palette.text }]}
+        placeholderTextColor={palette.textFaint}
+        style={styles.input}
         returnKeyType="done"
+        onSubmitEditing={onSubmit}
       />
-      <Pressable onPress={onToggle} hitSlop={10} style={({ pressed }) => [styles.eye, pressed ? { backgroundColor: palette.tabPressed } : null]} accessibilityRole="button" accessibilityLabel={show ? 'Скрыть пароль' : 'Показать пароль'}>
-        {show ? <EyeOff size={21} color={palette.eye} strokeWidth={2.2} /> : <Eye size={21} color={palette.eye} strokeWidth={2.2} />}
+      <Pressable onPress={onToggle} hitSlop={10} style={styles.eyeButton} accessibilityRole="button" accessibilityLabel={show ? 'Скрыть пароль' : 'Показать пароль'}>
+        {show ? <EyeOff size={20} color="rgba(255,255,255,.54)" /> : <Eye size={20} color="rgba(255,255,255,.54)" />}
       </Pressable>
     </Field>
   );
 }
 
-function Field({ label, icon, palette, children }) {
+function Field({ label, icon, children }) {
   return (
-    <View style={styles.fieldWrap}>
-      <Text style={[styles.label, { color: palette.label }]}>{label}</Text>
-      <View style={[styles.inputBox, { backgroundColor: palette.inputBg, borderColor: palette.border }]}> 
+    <View style={styles.fieldBlock}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputRow}>
         {icon}
         {children}
       </View>
@@ -257,161 +271,80 @@ function Field({ label, icon, palette, children }) {
   );
 }
 
-function SocialButton({ label, palette, children }) {
+function SocialButton({ label, color }) {
   return (
-    <Pressable onPress={() => Alert.alert(label, 'Скоро будет доступно')} style={({ pressed }) => [styles.social, { backgroundColor: palette.socialBg, borderColor: palette.border }, pressed ? { backgroundColor: palette.tabPressed } : null]} accessibilityRole="button" accessibilityLabel={label}>
-      {children}
+    <Pressable style={({ pressed }) => [styles.socialButton, pressed && styles.socialButtonPressed]} accessibilityRole="button" accessibilityLabel={label}>
+      <Text style={[styles.socialText, { color }]}>{label}</Text>
     </Pressable>
   );
 }
 
-const darkPalette = {
-  bg: '#090B16',
-  card: 'rgba(255,255,255,0.075)',
-  cardBorder: 'rgba(255,255,255,0.12)',
-  shadow: '#000000',
-  text: '#F9FAFF',
-  label: 'rgba(249,250,255,0.68)',
-  dim: 'rgba(249,250,255,0.38)',
-  border: 'rgba(255,255,255,0.12)',
-  tabsBg: 'rgba(0,0,0,0.24)',
-  activeTab: '#FFFFFF',
-  activeTabText: '#111827',
-  inactiveTabText: 'rgba(249,250,255,0.56)',
-  tabPressed: 'rgba(255,255,255,0.10)',
-  inputBg: 'rgba(0,0,0,0.22)',
-  placeholder: 'rgba(249,250,255,0.30)',
-  icon: 'rgba(249,250,255,0.38)',
-  eye: 'rgba(249,250,255,0.52)',
-  submit: '#FFFFFF',
-  submitText: '#111827',
-  socialBg: 'rgba(255,255,255,0.065)',
-  glowCyan: 'rgba(34,211,238,0.18)',
-  glowPink: 'rgba(242,45,143,0.22)',
-  glowBlue: 'rgba(47,123,255,0.12)',
-};
-
-const lightPalette = {
-  bg: '#F6F3FB',
-  card: 'rgba(255,255,255,0.84)',
-  cardBorder: 'rgba(96,72,135,0.14)',
-  shadow: '#3C236E',
-  text: '#151326',
-  label: 'rgba(21,19,38,0.66)',
-  dim: 'rgba(21,19,38,0.42)',
-  border: 'rgba(80,57,120,0.12)',
-  tabsBg: 'rgba(80,57,120,0.06)',
-  activeTab: '#151326',
-  activeTabText: '#FFFFFF',
-  inactiveTabText: 'rgba(21,19,38,0.56)',
-  tabPressed: 'rgba(242,45,143,0.08)',
-  inputBg: 'rgba(255,255,255,0.72)',
-  placeholder: 'rgba(21,19,38,0.32)',
-  icon: 'rgba(21,19,38,0.38)',
-  eye: 'rgba(21,19,38,0.54)',
-  submit: '#151326',
-  submitText: '#FFFFFF',
-  socialBg: 'rgba(255,255,255,0.62)',
-  glowCyan: 'rgba(34,211,238,0.14)',
-  glowPink: 'rgba(242,45,143,0.14)',
-  glowBlue: 'rgba(47,123,255,0.09)',
-};
-
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  flex: { flex: 1 },
-  scroll: {
-    minHeight: '100%',
+  screen: { flex: 1, backgroundColor: palette.bg },
+  keyboard: { flex: 1 },
+  glowLayer: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+  glow: { position: 'absolute', borderRadius: 999, opacity: 0.95 },
+  glowCyan: { left: -150, top: -170, width: 420, height: 420, backgroundColor: 'rgba(34,211,238,0.16)' },
+  glowPink: { right: -190, bottom: -150, width: 520, height: 520, backgroundColor: 'rgba(242,45,143,0.18)' },
+  glowBlue: { left: '30%', top: '30%', width: 360, height: 360, backgroundColor: 'rgba(47,123,255,0.10)' },
+  content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glowTop: {
-    position: 'absolute',
-    left: -96,
-    top: -130,
-    width: 420,
-    height: 420,
-    borderRadius: 210,
-    opacity: 1,
-  },
-  glowBottom: {
-    position: 'absolute',
-    right: -140,
-    bottom: -118,
-    width: 520,
-    height: 520,
-    borderRadius: 260,
-  },
-  glowCenter: {
-    position: 'absolute',
-    left: '18%',
-    top: '30%',
-    width: 360,
-    height: 360,
-    borderRadius: 180,
-  },
-  logoBlock: {
-    alignItems: 'center',
-    marginBottom: 22,
-  },
-  welcome: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '900',
-    letterSpacing: -0.6,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  logo: {
-    width: 235,
-    height: 78,
-  },
   card: {
     width: '100%',
-    maxWidth: 440,
-    borderWidth: 1,
+    maxWidth: 420,
     borderRadius: 32,
+    borderWidth: 1,
+    borderColor: palette.cardLine,
+    backgroundColor: palette.card,
     padding: 20,
-    shadowOpacity: 0.33,
-    shadowRadius: 30,
+    shadowColor: '#000000',
+    shadowOpacity: 0.4,
+    shadowRadius: 28,
     shadowOffset: { width: 0, height: 18 },
-    elevation: 12,
+    elevation: 9,
   },
   tabs: {
     flexDirection: 'row',
-    borderWidth: 1,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.cardLine,
+    backgroundColor: 'rgba(0,0,0,0.22)',
     padding: 4,
     marginBottom: 20,
     gap: 4,
   },
   tab: {
     flex: 1,
-    minHeight: 44,
+    height: 44,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
   },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '900',
+  tabActive: {
+    backgroundColor: palette.active,
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
-  form: {
-    gap: 16,
-  },
-  fieldWrap: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  inputBox: {
-    height: 56,
+  tabPressed: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  tabText: { color: 'rgba(255,255,255,0.52)', fontSize: 14, fontWeight: '800' },
+  tabTextActive: { color: palette.activeText },
+  form: { gap: 16 },
+  fieldsWrap: { minHeight: 292, gap: 14 },
+  fieldBlock: { gap: 8 },
+  label: { color: palette.textSoft, fontSize: 14, fontWeight: '700' },
+  inputRow: {
+    minHeight: 56,
     borderRadius: 18,
     borderWidth: 1,
+    borderColor: palette.cardLine,
+    backgroundColor: palette.field,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -419,92 +352,60 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    color: palette.text,
     fontSize: 16,
-    fontWeight: '700',
-    paddingVertical: 0,
+    paddingVertical: 12,
+    minHeight: 52,
   },
-  eye: {
+  eyeButton: {
     width: 34,
     height: 34,
-    borderRadius: 13,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  error: { color: palette.error, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   submit: {
-    marginTop: 18,
     height: 54,
     borderRadius: 18,
-    flexDirection: 'row',
+    backgroundColor: palette.active,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
+    flexDirection: 'row',
+    gap: 8,
     shadowColor: '#FFFFFF',
-    shadowOpacity: 0.10,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
     elevation: 4,
   },
-  submitText: {
-    fontSize: 17,
-    fontWeight: '900',
-  },
-  dividerRow: {
-    marginVertical: 22,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-  },
-  or: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 2.2,
-    textTransform: 'uppercase',
-  },
-  socialGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  social: {
+  submitPressed: { transform: [{ translateY: -1 }], opacity: 0.92 },
+  submitDisabled: { opacity: 0.45 },
+  submitText: { color: palette.activeText, fontSize: 16, fontWeight: '900' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 22 },
+  divider: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  dividerText: { color: palette.textFaint, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '800' },
+  socialRow: { flexDirection: 'row', gap: 12 },
+  socialButton: {
     flex: 1,
     height: 52,
     borderRadius: 18,
     borderWidth: 1,
+    borderColor: palette.cardLine,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  google: {
-    fontSize: 25,
-    fontWeight: '900',
-    color: '#4285F4',
-  },
-  yandex: {
-    fontSize: 25,
-    fontWeight: '900',
-    color: '#FC3F1D',
-  },
-  apple: {
-    fontSize: 28,
-    fontWeight: '900',
-    marginBottom: 3,
-  },
+  socialButtonPressed: { backgroundColor: 'rgba(255,255,255,0.12)', transform: [{ translateY: -1 }] },
+  socialText: { fontSize: 22, fontWeight: '900' },
   terms: {
-    maxWidth: 350,
-    marginTop: 18,
-    textAlign: 'center',
+    maxWidth: 340,
+    marginTop: 20,
+    paddingHorizontal: 4,
+    color: palette.textFaint,
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '700',
-  },
-  error: {
-    color: '#FF6B8A',
-    marginTop: 14,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '800',
     textAlign: 'center',
+    fontWeight: '600',
   },
 });

@@ -15,19 +15,32 @@ function phoneHash(phone) {
   return Math.abs(hash >>> 0).toString(36);
 }
 
-function buildIdentity({ name, phone, handle, mode, password, firstName, lastName }) {
-  const phoneDigits = normalizePhone(phone);
-  const id = phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`;
-  const cleanHandle = String(handle || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
+function cleanHandle(value = '') {
+  const raw = String(value || '')
+    .trim()
+    .replace(/^@+/, '')
+    .replace(/[^a-zA-Z0-9._]/g, '')
+    .slice(0, 28);
+  return raw ? `@${raw}` : '';
+}
+
+function buildIdentity(payload = {}) {
+  const phoneDigits = normalizePhone(payload.phone);
+  const mode = payload.mode === 'register' ? 'register' : 'login';
+  const firstName = String(payload.firstName || '').trim();
+  const lastName = String(payload.lastName || '').trim();
+  const fallbackName = String(payload.name || '').trim();
+  const name = mode === 'register' ? `${firstName} ${lastName}`.trim() : fallbackName;
+  const handle = cleanHandle(payload.handle || payload.nickname);
   return {
-    id,
-    mode: mode === 'register' ? 'register' : 'login',
-    name: String(name || '').trim(),
+    id: phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`,
+    mode,
     phone: phoneDigits,
-    handle: cleanHandle ? `@${cleanHandle}` : '',
-    firstName: String(firstName || '').trim(),
-    lastName: String(lastName || '').trim(),
-    password: String(password || ''),
+    password: String(payload.password || ''),
+    firstName,
+    lastName,
+    name,
+    handle,
   };
 }
 
@@ -50,17 +63,15 @@ export function useIdentity() {
   }, []);
 
   const save = async (payload) => {
-    const next = buildIdentity(typeof payload === 'string' ? { name: payload } : payload || {});
-    const requestBody = { ...next };
+    const next = buildIdentity(payload || {});
     const response = await fetch(`${API_URL}/api/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(next),
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) throw new Error(data?.error || 'Не удалось войти');
-    const { password, ...safeNext } = next;
-    const saved = data?.user ? { ...safeNext, ...data.user, phone: safeNext.phone, mode: undefined } : { ...safeNext, mode: undefined };
+    const saved = data?.user ? { ...next, ...data.user, password: undefined, mode: undefined } : { ...next, password: undefined, mode: undefined };
     await AsyncStorage.multiSet([[KEY, JSON.stringify(saved)]]);
     setIdentity(saved);
   };

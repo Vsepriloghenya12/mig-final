@@ -10,7 +10,7 @@ import { useMigData } from './hooks/useMigData';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { CreateScreen } from './screens/CreateScreen';
 import { FeedScreen } from './screens/FeedScreen';
-import { LoginScreen } from './screens/LoginScreen';
+import { RegistrationScreen } from './screens/auth/RegistrationScreen';
 import { NearbyScreen } from './screens/NearbyScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { UserProfileScreen } from './screens/UserProfileScreen';
@@ -62,7 +62,7 @@ function AppShell() {
   }, [active, identity, refreshUnread]);
 
   if (!ready) return <SafeAreaProvider><Center text="Открываем Близз..." /></SafeAreaProvider>;
-  if (!identity) return <SafeAreaProvider><LoginScreen onSave={save} /></SafeAreaProvider>;
+  if (!identity) return <SafeAreaProvider><RegistrationScreen onSave={save} /></SafeAreaProvider>;
   if (!data && loading) return <SafeAreaProvider><Center text="Загружаем Близз..." /></SafeAreaProvider>;
   if (!data && error) return <SafeAreaProvider><Center text={error} /></SafeAreaProvider>;
 
@@ -112,7 +112,7 @@ function AppShell() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar translucent={false} backgroundColor={isDark ? '#14141A' : palette.bg} barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar translucent={false} backgroundColor={isDark ? '#101326' : palette.bg} barStyle={isDark ? 'light-content' : 'dark-content'} />
       {body}
       <UserSearchSheet visible={searchOpen} users={data?.users || []} currentUserId={identity.id} api={api} onClose={() => setSearchOpen(false)} onOpenProfile={openUser} onOpenChat={openChat} />
       <PortalHost />

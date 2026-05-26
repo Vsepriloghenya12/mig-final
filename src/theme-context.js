@@ -6,21 +6,21 @@ const storageKey = 'mig.theme.mode';
 
 const dark = {
   ...light,
-  bg: '#090B16',
-  surface: '#10121E',
-  surfaceSoft: '#151827',
+  bg: '#090B18',
+  surface: '#121426',
+  surfaceSoft: '#171A2F',
   ink: '#FFFFFF',
   text: '#FFFFFF',
   muted: '#B8B3C8',
-  line: 'rgba(255,255,255,.16)',
-  faint: '#1A1D2D',
+  line: 'rgba(255,255,255,.13)',
+  faint: '#1B1F36',
   softPink: 'rgba(242,45,143,.18)',
   dangerSoft: 'rgba(229,72,104,.18)',
-  overlay: 'rgba(5,7,16,.48)',
-  card: '#10121E',
-  input: '#181B2A',
+  overlay: 'rgba(9,11,24,.46)',
+  card: '#121426',
+  input: '#1C2138',
   white: '#FFFFFF',
-  black: '#090B16',
+  black: '#090B18',
 };
 
 const ThemeContext = createContext({ mode: 'light', isDark: false, palette: light, toggleTheme: () => {} });
