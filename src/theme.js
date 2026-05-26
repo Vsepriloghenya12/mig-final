@@ -1,12 +1,12 @@
 export const colors = {
-  bg: '#FBFAFF',
-  surface: '#FFFFFF',
-  surfaceSoft: '#FFFBFD',
+  bg: '#F6F3FB',
+  surface: '#FFFDF8',
+  surfaceSoft: '#FDF7FF',
   ink: '#15142D',
   text: '#28243E',
   muted: '#7D7890',
   line: '#ECE8F6',
-  faint: '#F6F2FF',
+  faint: '#EFEAF8',
   softPink: '#FFF0F7',
   pink: '#F22D8F',
   hot: '#F22D8F',
@@ -20,7 +20,7 @@ export const colors = {
   dangerSoft: '#FFF1F4',
   overlay: 'rgba(12,10,22,.36)',
   black: '#050510',
-  white: '#FFFFFF'
+  white: '#FFFDF8'
 };
 export const moodColors = {
   joy: colors.yellow, love: colors.pink, calm: colors.blue, energy: colors.coral,

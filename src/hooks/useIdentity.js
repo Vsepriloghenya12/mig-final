@@ -15,7 +15,7 @@ function phoneHash(phone) {
   return Math.abs(hash >>> 0).toString(36);
 }
 
-function buildIdentity({ name, phone, handle, mode }) {
+function buildIdentity({ name, phone, handle, mode, password, firstName, lastName }) {
   const phoneDigits = normalizePhone(phone);
   const id = phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`;
   const cleanHandle = String(handle || '').trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
@@ -25,6 +25,9 @@ function buildIdentity({ name, phone, handle, mode }) {
     name: String(name || '').trim(),
     phone: phoneDigits,
     handle: cleanHandle ? `@${cleanHandle}` : '',
+    firstName: String(firstName || '').trim(),
+    lastName: String(lastName || '').trim(),
+    password: String(password || ''),
   };
 }
 
@@ -48,14 +51,16 @@ export function useIdentity() {
 
   const save = async (payload) => {
     const next = buildIdentity(typeof payload === 'string' ? { name: payload } : payload || {});
+    const requestBody = { ...next };
     const response = await fetch(`${API_URL}/api/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(next),
+      body: JSON.stringify(requestBody),
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) throw new Error(data?.error || 'Не удалось войти');
-    const saved = data?.user ? { ...next, ...data.user, phone: next.phone, mode: undefined } : { ...next, mode: undefined };
+    const { password, ...safeNext } = next;
+    const saved = data?.user ? { ...safeNext, ...data.user, phone: safeNext.phone, mode: undefined } : { ...safeNext, mode: undefined };
     await AsyncStorage.multiSet([[KEY, JSON.stringify(saved)]]);
     setIdentity(saved);
   };
