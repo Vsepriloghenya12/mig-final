@@ -41,7 +41,10 @@ export function PostItem({ post, onLike, onSave, onComment, onOpenProfile, onRep
   const [page, setPage] = useState(0);
   const { width } = useWindowDimensions();
   const media = useMemo(() => normalizedMedia(post), [post]);
-  const imageH = Math.min(Math.round((width - 24) * 0.98), 460);
+  const preferredRatio = Number(media[0]?.height || media[0]?.imageHeight || media[0]?.mediaHeight || 0) > 0 && Number(media[0]?.width || media[0]?.imageWidth || media[0]?.mediaWidth || 0) > 0
+    ? Number(media[0]?.height || media[0]?.imageHeight || media[0]?.mediaHeight) / Number(media[0]?.width || media[0]?.imageWidth || media[0]?.mediaWidth)
+    : 1.12;
+  const imageH = Math.round(Math.min(Math.max(width * preferredRatio, width * 0.72), width * 1.36));
   const share = () => Share.share({ message: `${post.author?.name || 'Близз'}: ${post.caption || 'Публикация в Близз'}` });
   const closeThen = (fn) => { setMenu(false); fn?.(); };
   const itemWidth = width;
@@ -79,7 +82,7 @@ export function PostItem({ post, onLike, onSave, onComment, onOpenProfile, onRep
                 style={[styles.image, { width: itemWidth, height: imageH }]}
                 controls={isVideoMedia(item)}
                 muted={false}
-                resizeMode={ResizeMode.CONTAIN}
+                resizeMode={ResizeMode.COVER}
               />
             ))}
           </ScrollView>

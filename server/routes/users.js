@@ -7,52 +7,59 @@ const router = express.Router();
 
 function normalizePhone(value = '') { return String(value).replace(/[^0-9]/g, ''); }
 function normalizeHandle(value = '') {
-  const raw = clean(value, '').replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
-  return raw ? `@${raw}` : '';
+  const requested = clean(value, '').replace(/^@+/, '').replace(/[^a-zA-Z0-9._]/g, '').slice(0, 28);
+  return requested ? `@${requested}` : '';
 }
-function passwordHash(password = '') {
-  return crypto.createHash('sha256').update(String(password)).digest('hex');
+function hashPassword(password, salt) {
+  return crypto.createHash('sha256').update(`${salt}:${password}`).digest('hex');
+}
+function setPassword(user, password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  user.passwordSalt = salt;
+  user.passwordHash = hashPassword(password, salt);
+}
+function verifyPassword(user, password) {
+  if (!user.passwordHash || !user.passwordSalt) return true;
+  return user.passwordHash === hashPassword(password, user.passwordSalt);
 }
 
 router.post('/users', (req, res) => {
   const db = readDb();
+  const mode = req.body.mode === 'register' ? 'register' : 'login';
   const phone = normalizePhone(req.body.phone);
   const password = String(req.body.password || '');
-  const mode = req.body.mode === 'register' ? 'register' : 'login';
-  const firstName = clean(req.body.firstName, '');
-  const lastName = clean(req.body.lastName, '');
-  const requestedName = clean(req.body.name, `${firstName} ${lastName}`.trim());
+  const firstName = clean(req.body.firstName, '').trim();
+  const lastName = clean(req.body.lastName, '').trim();
+  const name = clean(req.body.name, `${firstName} ${lastName}`.trim()).trim();
   const handle = normalizeHandle(req.body.handle || req.body.nickname);
   let user = phone ? db.users.find((u) => normalizePhone(u.phone) === phone) : null;
 
-  if (!phone) return res.status(400).json({ error: 'Введите номер телефона.' });
-  if (password.length < 6) return res.status(400).json({ error: 'Введите пароль минимум из 6 символов.' });
+  if (!phone || phone.length < 10) return res.status(400).json({ error: 'Введите номер телефона.' });
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Введите пароль минимум 6 символов.' });
 
   if (mode === 'login') {
     if (!user) return res.status(404).json({ error: 'Аккаунт с этим номером не найден. Зарегистрируйтесь.' });
-    if (user.passwordHash && user.passwordHash !== passwordHash(password)) return res.status(401).json({ error: 'Неверный пароль.' });
-    if (!user.passwordHash) user.passwordHash = passwordHash(password);
-    user.lastLoginAt = new Date().toISOString();
-    writeDb(db);
-    return res.json({ user: publicUser(user) });
+    if (!verifyPassword(user, password)) return res.status(401).json({ error: 'Неверный пароль.' });
+    if (!user.passwordHash) setPassword(user, password);
+  } else {
+    if (user) return res.status(409).json({ error: 'Аккаунт с этим номером уже существует. Войдите.' });
+    if (!firstName || firstName.length < 2) return res.status(400).json({ error: 'Введите имя.' });
+    if (!lastName || lastName.length < 2) return res.status(400).json({ error: 'Введите фамилию.' });
+    if (!handle) return res.status(400).json({ error: 'Введите никнейм.' });
+    const handleTaken = db.users.find((u) => String(u.handle || '').toLowerCase() === handle.toLowerCase());
+    if (handleTaken) return res.status(409).json({ error: 'Этот никнейм уже занят.' });
+    user = getUser(db, clean(req.body.id, `phone_${phone}`));
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.name = name || `${firstName} ${lastName}`.trim();
+    user.handle = handle;
+    setPassword(user, password);
   }
 
-  if (user) return res.status(409).json({ error: 'Аккаунт с этим номером уже есть. Войдите.' });
-  if (firstName.length < 2) return res.status(400).json({ error: 'Введите имя.' });
-  if (lastName.length < 2) return res.status(400).json({ error: 'Введите фамилию.' });
-  if (!handle) return res.status(400).json({ error: 'Введите никнейм.' });
-  const handleTaken = db.users.find((u) => String(u.handle || '').toLowerCase() === handle.toLowerCase());
-  if (handleTaken) return res.status(409).json({ error: 'Этот никнейм уже занят.' });
-
-  user = getUser(db, clean(req.body.id, `user_${Date.now()}`));
-  user.name = requestedName || `${firstName} ${lastName}`.trim();
-  user.firstName = firstName;
-  user.lastName = lastName;
   user.phone = phone;
-  user.handle = handle;
-  user.passwordHash = passwordHash(password);
   user.status ||= 'active';
   user.lastLoginAt = new Date().toISOString();
+  user.updatedAt = new Date().toISOString();
   writeDb(db);
   res.json({ user: publicUser(user) });
 });

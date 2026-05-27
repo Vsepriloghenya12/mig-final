@@ -15,26 +15,25 @@ function phoneHash(phone) {
   return Math.abs(hash >>> 0).toString(36);
 }
 
-function cleanHandle(value = '') {
-  const raw = String(value || '')
+function normalizeHandle(value = '') {
+  const clean = String(value || '')
     .trim()
     .replace(/^@+/, '')
     .replace(/[^a-zA-Z0-9._]/g, '')
     .slice(0, 28);
-  return raw ? `@${raw}` : '';
+  return clean ? `@${clean}` : '';
 }
 
 function buildIdentity(payload = {}) {
   const phoneDigits = normalizePhone(payload.phone);
-  const mode = payload.mode === 'register' ? 'register' : 'login';
   const firstName = String(payload.firstName || '').trim();
   const lastName = String(payload.lastName || '').trim();
-  const fallbackName = String(payload.name || '').trim();
-  const name = mode === 'register' ? `${firstName} ${lastName}`.trim() : fallbackName;
-  const handle = cleanHandle(payload.handle || payload.nickname);
+  const name = String(payload.name || `${firstName} ${lastName}`.trim()).trim();
+  const handle = normalizeHandle(payload.handle || payload.nickname);
+
   return {
     id: phoneDigits ? `phone_${phoneHash(phoneDigits)}` : `user_${Date.now().toString(36)}`,
-    mode,
+    mode: payload.mode === 'register' ? 'register' : 'login',
     phone: phoneDigits,
     password: String(payload.password || ''),
     firstName,
@@ -63,7 +62,7 @@ export function useIdentity() {
   }, []);
 
   const save = async (payload) => {
-    const next = buildIdentity(payload || {});
+    const next = buildIdentity(typeof payload === 'string' ? { name: payload } : payload || {});
     const response = await fetch(`${API_URL}/api/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +70,8 @@ export function useIdentity() {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) throw new Error(data?.error || 'Не удалось войти');
-    const saved = data?.user ? { ...next, ...data.user, password: undefined, mode: undefined } : { ...next, password: undefined, mode: undefined };
+    const { password, ...safeNext } = next;
+    const saved = data?.user ? { ...safeNext, ...data.user, phone: safeNext.phone, mode: undefined } : { ...safeNext, mode: undefined };
     await AsyncStorage.multiSet([[KEY, JSON.stringify(saved)]]);
     setIdentity(saved);
   };

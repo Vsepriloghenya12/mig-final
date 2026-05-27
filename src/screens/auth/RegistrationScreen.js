@@ -1,7 +1,5 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Alert,
-  Animated,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -9,14 +7,15 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   View,
 } from 'react-native';
-import { ArrowRight, Eye, EyeOff, Lock, Phone, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowRight, Eye, EyeOff, Lock, Phone, UserRound } from 'lucide-react-native';
 import { assets } from '../../assets';
 import { colors } from '../../theme';
-import { Text } from '../../components/ui/text';
+import { useTheme } from '../../theme-context';
 
 function isPhoneValid(phone) {
   return String(phone || '').replace(/[^0-9]/g, '').length >= 10;
@@ -36,17 +35,18 @@ function isRegisterValid({ phone, firstName, lastName, nickname, password }) {
   );
 }
 
-function cleanHandle(value) {
-  const raw = String(value || '')
+function normalizeHandle(value) {
+  const clean = String(value || '')
     .trim()
     .replace(/^@+/, '')
     .replace(/[^a-zA-Z0-9._]/g, '')
     .slice(0, 28);
-  return raw ? `@${raw}` : '';
+  return clean ? `@${clean}` : '';
 }
 
 export function RegistrationScreen({ onSave }) {
   const insets = useSafeAreaInsets();
+  const { palette, isDark } = useTheme();
   const [mode, setMode] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('+7 ');
@@ -56,121 +56,114 @@ export function RegistrationScreen({ onSave }) {
   const [nickname, setNickname] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const cardAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(cardAnim, {
-      toValue: 1,
-      damping: 18,
-      stiffness: 120,
-      mass: 0.9,
-      useNativeDriver: true,
-    }).start();
-  }, [cardAnim]);
 
   const canSubmit = useMemo(() => {
     if (mode === 'login') return isLoginValid({ phone, password });
     return isRegisterValid({ phone, firstName, lastName, nickname, password });
   }, [mode, phone, password, firstName, lastName, nickname]);
 
-  const handleSubmit = async () => {
-    setError('');
-    if (!canSubmit || busy) return;
-    setBusy(true);
-    try {
-      await onSave({
-        mode,
-        phone,
-        password,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-        nickname: nickname.trim(),
-        handle: cleanHandle(nickname),
-      });
-    } catch (e) {
-      setError(e?.message || (mode === 'login' ? 'Не удалось войти' : 'Не удалось создать аккаунт'));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const switchMode = (next) => {
     setMode(next);
     setError('');
   };
 
+  const handleSubmit = async () => {
+    setError('');
+    if (!canSubmit || busy) {
+      setError(mode === 'login' ? 'Введите телефон и пароль.' : 'Заполните все поля.');
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const first = firstName.trim();
+      const last = lastName.trim();
+      const handle = normalizeHandle(nickname);
+      await onSave({
+        mode,
+        phone,
+        password,
+        firstName: first,
+        lastName: last,
+        nickname: handle,
+        handle,
+        name: mode === 'register' ? `${first} ${last}`.trim() : '',
+      });
+    } catch (e) {
+      setError(e?.message || (mode === 'login' ? 'Не удалось войти.' : 'Не удалось создать аккаунт.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const textColor = isDark ? '#FFFFFF' : colors.ink;
+  const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : colors.muted;
+  const cardBg = isDark ? '#12172A' : '#FFFCFF';
+  const panelBg = isDark ? '#0D1122' : '#F5EEFF';
+  const inputBg = isDark ? '#0B1020' : '#FFFFFF';
+  const lineColor = isDark ? 'rgba(255,255,255,0.12)' : '#E8DFF4';
+  const iconColor = isDark ? 'rgba(255,255,255,0.44)' : 'rgba(21,20,45,0.42)';
+  const placeholderColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(21,20,45,0.32)';
+
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: palette.bg }]}> 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboard}>
         <View pointerEvents="none" style={styles.glowLayer}>
-          <View style={[styles.glow, styles.glowCyan]} />
-          <View style={[styles.glow, styles.glowPink]} />
-          <View style={[styles.glow, styles.glowBlue]} />
+          <View style={[styles.glow, styles.glowTop]} />
+          <View style={[styles.glow, styles.glowBottom]} />
+          <View style={[styles.glow, styles.glowCenter]} />
         </View>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + 20, 36), paddingBottom: insets.bottom + 28 }]}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 26, paddingBottom: insets.bottom + 26 }]}
         >
           <View style={styles.logoBlock}>
-            <Text style={styles.welcome}>Добро пожаловать в</Text>
             <Image source={assets.fullLogo} resizeMode="contain" style={styles.logo} />
           </View>
 
-          <Animated.View
-            style={[
-              styles.card,
-              {
-                opacity: cardAnim,
-                transform: [
-                  { translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-                  { scale: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] }) },
-                ],
-              },
-            ]}
-          >
-            <View style={styles.tabs}>
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: lineColor }]}> 
+            <View style={[styles.tabs, { backgroundColor: panelBg, borderColor: lineColor }]}> 
               <TabButton label="Войти" active={mode === 'login'} onPress={() => switchMode('login')} />
               <TabButton label="Зарегистрироваться" active={mode === 'register'} onPress={() => switchMode('register')} />
             </View>
 
             <View style={styles.form}>
-              <View style={styles.fieldsArea}>
-                <PhoneField value={phone} onChange={setPhone} />
+              <View style={styles.fieldsWrap}>
+                <PhoneField value={phone} onChange={setPhone} iconColor={iconColor} textColor={textColor} mutedColor={mutedColor} placeholderColor={placeholderColor} inputBg={inputBg} lineColor={lineColor} />
 
                 {mode === 'register' ? (
                   <>
-                    <Field label="Имя" icon={<UserRound size={20} color={rgba.white35} />}>
+                    <Field label="Имя" icon={<UserRound size={20} color={iconColor} strokeWidth={2.1} />} textColor={textColor} mutedColor={mutedColor} inputBg={inputBg} lineColor={lineColor}>
                       <TextInput
                         value={firstName}
                         onChangeText={setFirstName}
                         placeholder="Введите имя"
-                        placeholderTextColor={rgba.white25}
-                        style={styles.input}
+                        placeholderTextColor={placeholderColor}
+                        style={[styles.input, { color: textColor }]}
                         returnKeyType="next"
                       />
                     </Field>
 
-                    <Field label="Фамилия" icon={<UserRound size={20} color={rgba.white35} />}>
+                    <Field label="Фамилия" icon={<UserRound size={20} color={iconColor} strokeWidth={2.1} />} textColor={textColor} mutedColor={mutedColor} inputBg={inputBg} lineColor={lineColor}>
                       <TextInput
                         value={lastName}
                         onChangeText={setLastName}
                         placeholder="Введите фамилию"
-                        placeholderTextColor={rgba.white25}
-                        style={styles.input}
+                        placeholderTextColor={placeholderColor}
+                        style={[styles.input, { color: textColor }]}
                         returnKeyType="next"
                       />
                     </Field>
 
-                    <Field label="Никнейм" icon={<UserRound size={20} color={rgba.white35} />}>
+                    <Field label="Никнейм" icon={<UserRound size={20} color={iconColor} strokeWidth={2.1} />} textColor={textColor} mutedColor={mutedColor} inputBg={inputBg} lineColor={lineColor}>
                       <TextInput
                         value={nickname}
                         onChangeText={setNickname}
                         placeholder="Введите никнейм"
-                        placeholderTextColor={rgba.white25}
-                        style={styles.input}
+                        placeholderTextColor={placeholderColor}
+                        style={[styles.input, { color: textColor }]}
                         autoCapitalize="none"
                         autoCorrect={false}
                         returnKeyType="next"
@@ -179,90 +172,88 @@ export function RegistrationScreen({ onSave }) {
                   </>
                 ) : null}
 
-                <PasswordField value={password} onChange={setPassword} show={showPassword} setShow={setShowPassword} mode={mode} onSubmit={handleSubmit} />
+                <Field label="Пароль" icon={<Lock size={20} color={iconColor} strokeWidth={2.1} />} textColor={textColor} mutedColor={mutedColor} inputBg={inputBg} lineColor={lineColor}>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={mode === 'login' ? 'Введите пароль' : 'Минимум 6 символов'}
+                    placeholderTextColor={placeholderColor}
+                    secureTextEntry={!showPassword}
+                    style={[styles.input, { color: textColor }]}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSubmit}
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword((value) => !value)}
+                    style={styles.eyeButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                  >
+                    {showPassword ? <EyeOff size={20} color={iconColor} /> : <Eye size={20} color={iconColor} />}
+                  </Pressable>
+                </Field>
               </View>
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
               <Pressable
                 onPress={handleSubmit}
-                disabled={!canSubmit || busy}
+                disabled={busy}
                 style={({ pressed }) => [
                   styles.submit,
-                  (!canSubmit || busy) && styles.submitDisabled,
-                  pressed && canSubmit && !busy ? styles.submitPressed : null,
+                  busy && styles.submitDisabled,
+                  pressed && !busy ? styles.submitPressed : null,
                 ]}
                 accessibilityRole="button"
-                accessibilityState={{ disabled: !canSubmit || busy }}
+                accessibilityLabel={mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
               >
                 <Text style={styles.submitText}>{busy ? 'Подождите...' : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</Text>
-                <ArrowRight size={20} color="#121524" />
               </Pressable>
             </View>
 
-            <View style={styles.separator}>
-              <View style={styles.separatorLine} />
-              <Text style={styles.separatorText}>или</Text>
-              <View style={styles.separatorLine} />
+            <View style={styles.dividerRow}>
+              <View style={[styles.divider, { backgroundColor: lineColor }]} />
+              <Text style={[styles.dividerText, { color: mutedColor }]}>или</Text>
+              <View style={[styles.divider, { backgroundColor: lineColor }]} />
             </View>
 
             <View style={styles.socialGrid}>
-              <SocialButton label="Google" value="G" color="#FFFFFF" textColor="#4285F4" />
-              <SocialButton label="Яндекс" value="Я" color="#FFFFFF" textColor="#FC3F1D" />
-              <SocialButton label="Telegram" value="✈" color="#FFFFFF" textColor="#26A5E4" />
-              <SocialButton label="Apple ID" value="" color="#FFFFFF" textColor="#FFFFFF" />
+              <SocialButton label="Google" text="G" textStyle={styles.googleText} lineColor={lineColor} inputBg={inputBg} />
+              <SocialButton label="Яндекс" text="Я" textStyle={styles.yandexText} lineColor={lineColor} inputBg={inputBg} />
+              <SocialButton label="Telegram" text="✈" textStyle={styles.telegramText} lineColor={lineColor} inputBg={inputBg} />
+              <SocialButton label="Apple ID" text="" textStyle={[styles.appleText, { color: textColor }]} lineColor={lineColor} inputBg={inputBg} />
             </View>
-          </Animated.View>
+          </View>
 
-          <Text style={styles.terms}>Продолжая, вы соглашаетесь с условиями сервиса и политикой конфиденциальности.</Text>
+          <Text style={[styles.terms, { color: mutedColor }]}>Продолжая, вы соглашаетесь с условиями сервиса и политикой конфиденциальности.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function PhoneField({ value, onChange }) {
+function PhoneField({ value, onChange, iconColor, textColor, mutedColor, placeholderColor, inputBg, lineColor }) {
   return (
-    <Field label="Номер телефона" icon={<Phone size={20} color={rgba.white35} />}>
+    <Field label="Номер телефона" icon={<Phone size={20} color={iconColor} strokeWidth={2.1} />} textColor={textColor} mutedColor={mutedColor} inputBg={inputBg} lineColor={lineColor}>
       <TextInput
         value={value}
         onChangeText={onChange}
         keyboardType="phone-pad"
         inputMode="tel"
         placeholder="+7 999 000-00-00"
-        placeholderTextColor={rgba.white25}
-        style={styles.input}
+        placeholderTextColor={placeholderColor}
+        style={[styles.input, { color: textColor }]}
         returnKeyType="next"
       />
     </Field>
   );
 }
 
-function PasswordField({ value, onChange, show, setShow, mode, onSubmit }) {
-  return (
-    <Field label="Пароль" icon={<Lock size={20} color={rgba.white35} />}>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        secureTextEntry={!show}
-        placeholder={mode === 'login' ? 'Введите пароль' : 'Минимум 6 символов'}
-        placeholderTextColor={rgba.white25}
-        style={styles.input}
-        returnKeyType="done"
-        onSubmitEditing={onSubmit}
-      />
-      <Pressable onPress={() => setShow((current) => !current)} style={styles.eyeButton} accessibilityRole="button" accessibilityLabel={show ? 'Скрыть пароль' : 'Показать пароль'}>
-        {show ? <EyeOff size={20} color={rgba.white55} /> : <Eye size={20} color={rgba.white55} />}
-      </Pressable>
-    </Field>
-  );
-}
-
-function Field({ label, icon, children }) {
+function Field({ label, icon, children, mutedColor, inputBg, lineColor }) {
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputWrap}>
+      <Text style={[styles.label, { color: mutedColor }]}>{label}</Text>
+      <View style={[styles.inputShell, { backgroundColor: inputBg, borderColor: lineColor }]}> 
         {icon}
         {children}
       </View>
@@ -272,34 +263,23 @@ function Field({ label, icon, children }) {
 
 function TabButton({ label, active, onPress }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.tab, active && styles.tabActive, pressed && !active ? styles.tabPressed : null]} accessibilityRole="tab" accessibilityState={{ selected: active }}>
+    <Pressable onPress={onPress} style={[styles.tab, active && styles.tabActive]} accessibilityRole="button" accessibilityState={{ selected: active }}>
       <Text style={[styles.tabText, active && styles.tabTextActive]}>{label}</Text>
     </Pressable>
   );
 }
 
-function SocialButton({ label, value, textColor }) {
-  const onPress = () => Alert.alert(label, 'Социальный вход будет подключён позже');
+function SocialButton({ label, text, textStyle, lineColor, inputBg }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.social, pressed && styles.socialPressed]} accessibilityRole="button" accessibilityLabel={label}>
-      <Text style={[styles.socialText, { color: textColor }]}>{value}</Text>
+    <Pressable style={[styles.socialButton, { borderColor: lineColor, backgroundColor: inputBg }]} accessibilityRole="button" accessibilityLabel={label}>
+      <Text style={[styles.socialText, textStyle]}>{text}</Text>
     </Pressable>
   );
 }
 
-const rgba = {
-  white10: 'rgba(255,255,255,0.10)',
-  white12: 'rgba(255,255,255,0.12)',
-  white25: 'rgba(255,255,255,0.25)',
-  white35: 'rgba(255,255,255,0.35)',
-  white55: 'rgba(255,255,255,0.55)',
-  white65: 'rgba(255,255,255,0.65)',
-};
-
 const styles = StyleSheet.create({
-  screen: {
+  safe: {
     flex: 1,
-    backgroundColor: '#090B18',
   },
   keyboard: {
     flex: 1,
@@ -310,164 +290,141 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
-    borderRadius: 260,
-    opacity: 0.9,
+    borderRadius: 999,
   },
-  glowCyan: {
-    left: -125,
-    top: -130,
-    width: 420,
-    height: 420,
-    backgroundColor: 'rgba(47, 205, 255, 0.16)',
-  },
-  glowPink: {
-    right: -145,
-    bottom: -145,
-    width: 520,
-    height: 520,
-    backgroundColor: 'rgba(242, 45, 143, 0.20)',
-  },
-  glowBlue: {
-    left: '18%',
-    top: '33%',
+  glowTop: {
+    left: -118,
+    top: -102,
     width: 360,
     height: 360,
-    backgroundColor: 'rgba(47, 123, 255, 0.12)',
+    backgroundColor: 'rgba(36, 203, 255, 0.14)',
+  },
+  glowBottom: {
+    right: -138,
+    bottom: -118,
+    width: 420,
+    height: 420,
+    backgroundColor: 'rgba(242, 45, 143, 0.16)',
+  },
+  glowCenter: {
+    left: '18%',
+    top: '28%',
+    width: 330,
+    height: 330,
+    backgroundColor: 'rgba(47, 123, 255, 0.10)',
   },
   content: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoBlock: {
+    width: '100%',
     alignItems: 'center',
-    marginBottom: 22,
-  },
-  welcome: {
-    color: '#FFFFFF',
-    fontSize: 27,
-    lineHeight: 33,
-    fontWeight: '900',
-    letterSpacing: -0.35,
-    textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 18,
   },
   logo: {
-    width: 220,
-    height: 76,
+    width: 210,
+    height: 82,
   },
   card: {
     width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
+    maxWidth: 420,
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: rgba.white10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     padding: 20,
-    shadowColor: '#000000',
-    shadowOpacity: 0.42,
+    shadowColor: '#1B143B',
+    shadowOpacity: 0.18,
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 18 },
-    elevation: 14,
+    elevation: 8,
   },
   tabs: {
-    marginBottom: 20,
+    height: 52,
     flexDirection: 'row',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: rgba.white10,
-    backgroundColor: 'rgba(0,0,0,0.22)',
-    padding: 4,
     gap: 4,
+    padding: 4,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 20,
   },
   tab: {
     flex: 1,
-    height: 44,
-    borderRadius: 15,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabActive: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#FFFFFF',
-    shadowOpacity: 0.16,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
-  },
-  tabPressed: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#22164E',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
   },
   tabText: {
-    color: 'rgba(255,255,255,0.54)',
+    color: 'rgba(125,120,144,0.88)',
     fontSize: 14,
     fontWeight: '900',
   },
   tabTextActive: {
-    color: '#121524',
+    color: '#15142D',
   },
   form: {
-    gap: 4,
+    gap: 16,
   },
-  fieldsArea: {
-    minHeight: 262,
+  fieldsWrap: {
     gap: 14,
   },
   field: {
     gap: 8,
   },
   label: {
-    color: rgba.white65,
     fontSize: 14,
+    lineHeight: 18,
     fontWeight: '800',
   },
-  inputWrap: {
-    height: 56,
+  inputShell: {
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: rgba.white10,
-    backgroundColor: 'rgba(0,0,0,0.24)',
     paddingHorizontal: 16,
   },
   input: {
     flex: 1,
-    minHeight: 48,
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    paddingVertical: 0,
+    paddingVertical: 12,
   },
   eyeButton: {
     width: 34,
     height: 34,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 12,
   },
   error: {
-    color: '#FF8EAD',
+    color: '#FF5D8F',
     fontSize: 13,
-    fontWeight: '800',
     lineHeight: 18,
-    marginTop: 10,
+    fontWeight: '800',
   },
   submit: {
-    marginTop: 16,
-    height: 54,
     width: '100%',
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
+    minHeight: 58,
+    marginTop: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#FFFFFF',
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
+    borderRadius: 18,
+    backgroundColor: '#F22D8F',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.38)',
+    shadowColor: '#F22D8F',
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 5,
   },
@@ -476,60 +433,65 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   submitDisabled: {
-    opacity: 0.45,
+    opacity: 0.72,
   },
   submitText: {
-    color: '#121524',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 17,
     fontWeight: '900',
   },
-  separator: {
+  dividerRow: {
     marginVertical: 22,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  separatorLine: {
+  divider: {
     flex: 1,
     height: 1,
-    backgroundColor: rgba.white10,
   },
-  separatorText: {
-    color: rgba.white35,
+  dividerText: {
     fontSize: 11,
     letterSpacing: 2.2,
     textTransform: 'uppercase',
-    fontWeight: '800',
+    fontWeight: '900',
   },
   socialGrid: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
-  social: {
+  socialButton: {
     flex: 1,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: rgba.white10,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  socialPressed: {
-    backgroundColor: rgba.white12,
-    transform: [{ translateY: 1 }],
   },
   socialText: {
-    fontSize: 25,
+    color: '#FFFFFF',
+    fontSize: 22,
     fontWeight: '900',
   },
+  googleText: {
+    color: '#2F7BFF',
+  },
+  yandexText: {
+    color: '#FC3F1D',
+  },
+  telegramText: {
+    color: '#26A5E4',
+  },
+  appleText: {
+    fontSize: 25,
+  },
   terms: {
+    maxWidth: 360,
     marginTop: 18,
-    paddingHorizontal: 12,
-    color: rgba.white35,
-    textAlign: 'center',
+    paddingHorizontal: 8,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '700',
+    textAlign: 'center',
   },
 });
